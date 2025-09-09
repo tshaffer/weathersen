@@ -1,4 +1,9 @@
 // src/geocode.ts
+import dotenv from 'dotenv';
+dotenv.config();
+console.log('Environment variables loaded from .env file in geocode.ts');
+console.log('GOOGLE_MAPS_API_KEY:', process.env.GOOGLE_MAPS_API_KEY ? '***' : 'MISSING');
+
 import axios from "axios";
 
 export interface LatLng { lat: number; lng: number; }

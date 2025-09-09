@@ -1,10 +1,6 @@
 // src/demo.ts
-import { geocodeCity } from "./geocode";
-import {
-  getDailyForecast,
-  type DailyForecastDay,
-  type ForecastDayPart,
-} from "./googleWeather";
+import { ForecastDayPart, DailyForecastDay } from "../types";
+import { geocodeCity, getDailyForecast } from "../utilities";
 
 // ---------- utils ----------
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -93,7 +89,7 @@ function fmtPrecip(part?: ForecastDayPart | any): string {
     typeof part.precipitation.probability?.percent === "number"
       ? `${part.precipitation.probability.percent}%`
       : // fallback to your shape if ever present
-        typeof part.precipitation?.probability === "number"
+      typeof part.precipitation?.probability === "number"
         ? `${Math.round(part.precipitation.probability)}%`
         : "—";
 
@@ -119,17 +115,15 @@ function printPart(label: string, part?: ForecastDayPart | any) {
   lines.push(`  UV Index: ${part?.uvIndex ?? "—"}`);
   lines.push(`  Precip: ${fmtPrecip(part)}`);
   lines.push(
-    `  Thunderstorm Prob: ${
-      typeof part?.thunderstormProbability === "number"
-        ? fmtPercent(part.thunderstormProbability)
-        : "—"
+    `  Thunderstorm Prob: ${typeof part?.thunderstormProbability === "number"
+      ? fmtPercent(part.thunderstormProbability)
+      : "—"
     }`
   );
   lines.push(
-    `  Cloud Cover: ${
-      typeof (part as any)?.cloudCover === "number"
-        ? fmtPercent((part as any).cloudCover)
-        : "—"
+    `  Cloud Cover: ${typeof (part as any)?.cloudCover === "number"
+      ? fmtPercent((part as any).cloudCover)
+      : "—"
     }`
   );
   return lines.join("\n");
@@ -164,8 +158,18 @@ async function run() {
   }
 }
 
-run().catch((err) => {
-  const data = (err as any)?.response?.data;
-  console.error(data ?? err);
-  process.exit(1);
-});
+// run().catch((err) => {
+//   const data = (err as any)?.response?.data;
+//   console.error(data ?? err);
+//   process.exit(1);
+// });
+
+export async function runDemo() {
+  console.log("Demo runDemo() invoked");
+  // await run();
+  run().catch((err) => {
+    const data = (err as any)?.response?.data;
+    console.error(data ?? err);
+    process.exit(1);
+  });
+}
