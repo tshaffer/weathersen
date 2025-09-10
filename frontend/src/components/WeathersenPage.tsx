@@ -1,16 +1,7 @@
 import React from 'react';
-import ItineraryInput, { Itinerary } from './ItineraryInput';
+import AppShell from './AppShell';
 
 export default function WeathersenPage() {
-  const [itinerary, setItinerary] = React.useState<Itinerary>([]);
-  return (
-    <div style={{ padding: 16 }}>
-      <ItineraryInput
-        value={itinerary}
-        onChange={setItinerary}
-        onClear={() => setItinerary([])}
-      />
-      {/* Later: pass `itinerary` into your forecast table component */}
-    </div>
-  );
+  // Thin wrapper so routing can mount the whole shell
+  return <AppShell />;
 }

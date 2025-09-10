@@ -20,6 +20,7 @@ import {
   Divider,
   Chip,
   Stack,
+  Button,
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
@@ -28,14 +29,17 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
+import ItineraryInput, { Itinerary, ItineraryStop } from './ItineraryInput';
+
 // ---------------------- Types ----------------------
+// Make these optional so we can display placeholders before we have real data:
 interface Forecast {
   id: string;
   date: string;
   location: string;
-  minTempC: number;
-  maxTempC: number;
-  precipChancePct: number;
+  minTempC?: number;
+  maxTempC?: number;
+  precipChancePct?: number;
   windKph?: number;
   uvIndex?: number;
   cloudCoverPct?: number;
@@ -91,8 +95,28 @@ const sampleData: Forecast[] = [
 ];
 
 // ---------------------- Utilities ----------------------
-const formatTemp = (c: number) => `${c.toFixed(0)}°C`;
-const formatPct = (n?: number) => (n == null ? '—' : `${n}%`);
+const formatTemp = (c?: number) => (typeof c === 'number' ? `${c.toFixed(0)}°C` : '—');
+const formatPct = (n?: number) => (typeof n === 'number' ? `${n}%` : '—');
+
+const keyFor = (loc: string, date: string) =>
+  `${(loc || '').toLowerCase().trim()}|${(date || '').trim()}`;
+
+function mergeItineraryWithForecasts(itinerary: Itinerary, samples: Forecast[]): Forecast[] {
+  const sampleIndex = new Map(samples.map(s => [keyFor(s.location, s.date), s]));
+  return itinerary
+    .filter(s => s.location || s.date) // ignore completely blank rows
+    .map((s) => {
+      const sample = sampleIndex.get(keyFor(s.location, s.date));
+      if (sample) return sample;
+      // Placeholder row until real fetch wires in:
+      return {
+        id: `it-${s.id}`,
+        date: s.date,
+        location: s.location,
+        summary: '—',
+      } as Forecast;
+    });
+}
 
 // ---------------------- Compact Expandable Row ----------------------
 const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
@@ -105,11 +129,11 @@ const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell>{row.date}</TableCell>
+        <TableCell>{row.date || '—'}</TableCell>
         <TableCell>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="body2">{row.location}</Typography>
-            {row.precipChancePct >= 40 && (
+            <Typography variant="body2">{row.location || '—'}</Typography>
+            {typeof row.precipChancePct === 'number' && row.precipChancePct >= 40 && (
               <Chip size="small" label="Rain" color="primary" variant="outlined" />
             )}
           </Stack>
@@ -168,7 +192,18 @@ const SummaryTable: React.FC<{ rows: Forecast[] }> = ({ rows }) => {
 
 // ---------------------- AppShell ----------------------
 const AppShell: React.FC = () => {
-  const rows = useMemo(() => sampleData, []);
+  // 1) Own the itinerary here so ItineraryInput + SummaryTable share the same data
+  const [itinerary, setItinerary] = useState<Itinerary>([
+    // seed with one empty stop (today) — ItineraryInput will display it:
+    { id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) },
+  ]);
+
+  // 2) Rows are derived from itinerary + any available forecast data
+  const rows = useMemo(() => mergeItineraryWithForecasts(itinerary, sampleData), [itinerary]);
+
+  const handleClear = () => {
+    setItinerary([{ id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) }]);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -187,6 +222,16 @@ const AppShell: React.FC = () => {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 3, flexGrow: 1 }}>
+        {/* Itinerary Input */}
+        <Box mb={2}>
+          <ItineraryInput
+            value={itinerary}
+            onChange={setItinerary}
+            onClear={handleClear}
+          />
+        </Box>
+
+        {/* Summary table derived from itinerary */}
         <Typography variant="subtitle1" gutterBottom>
           Forecast overview with expandable rows for details
         </Typography>
