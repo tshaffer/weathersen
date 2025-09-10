@@ -21,6 +21,7 @@
       ],
       "envFile": "${workspaceFolder}/backend/.env",
       "runtimeExecutable": "node",
+      "runtimeVersion": "22",
       "sourceMaps": true
     }
   ]

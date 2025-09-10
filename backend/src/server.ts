@@ -10,28 +10,25 @@ import { createRoutes } from './routes';
 const PORT = Number(process.env.PORT || 8080);
 
 async function main() {
-
   const app = express();
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
 
-  // Health
+  // --- Health endpoint ---
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
 
-  // API routes
-  createRoutes(app); // should mount under /api/v1
+  // --- API routes ---
+  createRoutes(app); // mounts under /api/v1
 
-  // --- NEW: Dynamic env-config.json endpoint ---
+  // --- Dynamic env-config.json endpoint ---
   app.get('/env-config.json', (_req, res) => {
     res.json({
       BACKEND_URL: process.env.BACKEND_URL ?? '',
-      // Add other frontend-consumable env vars here
       // MAPS_API_KEY: process.env.MAPS_API_KEY ?? ''
     });
   });
-  // ---------------------------------------------
 
-  // Static frontend serving (keeps "/" loading the app)
+  // --- Static frontend serving ---
   const publicDir = path.join(__dirname, '../public');
   const fallbackDist = path.join(__dirname, '../../frontend/dist');
   const clientDir = fs.existsSync(publicDir) ? publicDir : fallbackDist;
@@ -39,23 +36,26 @@ async function main() {
   if (fs.existsSync(clientDir)) {
     app.use(express.static(clientDir));
 
-    // Serve index.html for all non-API GET requests (client-side routing)
+    // Catch-all: serve index.html for all non-API, non-health, non-env requests
     app.get(/^(?!(?:\/api\/|\/healthz$|\/env-config\.json$)).*/, (req, res) => {
       res.sendFile(path.join(clientDir, 'index.html'));
     });
-
   } else {
-    console.warn(`[WARN] No frontend build found at ${clientDir}. "/" will not serve the app until you build.`);
+    console.warn(
+      `[WARN] No frontend build found at ${clientDir}. "/" will not serve the app until you build.`
+    );
   }
 
-  // Central error handler
+  // --- Central error handler ---
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = Number(err?.statusCode || err?.status || 500);
-    const message = typeof err?.message === 'string' ? err.message : 'Internal Server Error';
+    const message =
+      typeof err?.message === 'string' ? err.message : 'Internal Server Error';
     if (status >= 500) console.error('[ERROR]', err);
     res.status(status).json({ error: message });
   });
 
+  // --- Start server ---
   const server: Server = app.listen(PORT, () => {
     console.log(`✅ API listening on http://localhost:${PORT}`);
     if (fs.existsSync(clientDir)) {
@@ -64,6 +64,7 @@ async function main() {
     }
   });
 
+  // --- Graceful shutdown ---
   const shutdown = (signal: string) => {
     console.log(`\n${signal} received: closing server...`);
     server.close(() => {
