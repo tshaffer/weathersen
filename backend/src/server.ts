@@ -38,10 +38,12 @@ async function main() {
 
   if (fs.existsSync(clientDir)) {
     app.use(express.static(clientDir));
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api/') || req.path === '/healthz') return next();
+
+    // Serve index.html for all non-API GET requests (client-side routing)
+    app.get(/^(?!(?:\/api\/|\/healthz$|\/env-config\.json$)).*/, (req, res) => {
       res.sendFile(path.join(clientDir, 'index.html'));
     });
+
   } else {
     console.warn(`[WARN] No frontend build found at ${clientDir}. "/" will not serve the app until you build.`);
   }
