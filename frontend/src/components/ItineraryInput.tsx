@@ -27,6 +27,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
+import axios from "axios";
 
 // ---------------- Types ----------------
 export type ItineraryStop = {
@@ -96,11 +97,15 @@ export default function ItineraryInput({
     [locationSuggestions]
   );
 
-  const handleSetMapLocation = (location: google.maps.LatLngLiteral): void => {
+  const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string): Promise<void> => {
     console.log("Selected location:", location);
     // dispatch(setCurrentMapLocation(location));
-  }
 
+    const res = await axios.get('/api/v1/forecast', {
+      params: { location: JSON.stringify(location), date },
+    });
+    console.log('Forecast response:', res.data);
+  };
 
   const addStop = () => {
     const base = itinerary.length
@@ -186,7 +191,7 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               value={stop.location}
                               onChangeText={(text) => updateStop(idx, { location: text })}
-                              onSetMapLocation={handleSetMapLocation}
+                              onSetMapLocation={(location) => handleSetMapLocation(location, stop.date)}
                             />
                             {/* <Autocomplete
                               freeSolo
