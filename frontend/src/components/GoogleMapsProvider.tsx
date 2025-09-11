@@ -2,26 +2,18 @@
 import * as React from 'react';
 import { useJsApiLoader, type Libraries } from '@react-google-maps/api';
 
-type Props = {
-  children: React.ReactNode;
-};
-
 const libraries: Libraries = ['places'];
 
-export default function GoogleMapsProvider({ children }: Props) {
+export default function GoogleMapsProvider({ children }: { children: React.ReactNode }) {
+  const googleMapsApiKey =
+    (window as any).__ENV__?.GOOGLE_MAPS_API_KEY ?? '<fallback-dev-key-here>';
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-maps-script',
-    googleMapsApiKey: '<my-google-maps-api-key>',
+    googleMapsApiKey,
     libraries,
   });
 
-  if (loadError) {
-    // Render something that is still a ReactElement, not undefined
-    return <></>;
-  }
-
-  // Only render children after the script is loaded; always return a ReactElement
-  // return isLoaded ? <>{children}</> : <></>;
+  if (loadError) return <></>;
   return isLoaded ? <>{children}</> : <div>Loading maps…</div>;
-
 }

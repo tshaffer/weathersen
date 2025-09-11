@@ -184,9 +184,10 @@ export default function ItineraryInput({
                             </Typography>
 
                             <LocationAutocomplete
+                              value={stop.location}
+                              onChangeText={(text) => updateStop(idx, { location: text })}
                               onSetMapLocation={handleSetMapLocation}
                             />
-
                             {/* <Autocomplete
                               freeSolo
                               options={suggestions}

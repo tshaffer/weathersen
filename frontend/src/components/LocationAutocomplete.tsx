@@ -1,30 +1,36 @@
+// LocationAutocomplete.tsx
 import { Box } from '@mui/material';
 import { Autocomplete } from '@react-google-maps/api';
 import { useRef } from 'react';
 
 interface LocationAutocompleteProps {
-  onSetMapLocation: (mapLocation: google.maps.LatLngLiteral) => void;
+  value: string;                                   // NEW
+  onChangeText: (text: string) => void;            // NEW
+  onSetMapLocation: (loc: google.maps.LatLngLiteral) => void;
 }
 
 const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
+  value,
+  onChangeText,
   onSetMapLocation,
 }) => {
-
   const mapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleMapLocationChanged = () => {
-    if (mapAutocompleteRef.current) {
-      const place = mapAutocompleteRef.current.getPlace();
-      if (place?.geometry?.location && place.formatted_address) {
-        const newCoordinates = {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-        };
-        onSetMapLocation(newCoordinates);
-      } else {
-        console.error('No place found in handleMapLocationChanged');
-      }
+    if (!mapAutocompleteRef.current) return;
+    const place = mapAutocompleteRef.current.getPlace();
+    if (place?.geometry?.location) {
+      const newCoordinates = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      };
+      // Use the formatted address (or fallback to description) as the text value
+      const text = place.formatted_address ?? place.name ?? '';
+      onChangeText(text);                 // keep itinerary text in sync
+      onSetMapLocation(newCoordinates);   // let caller store lat/lng if desired
+    } else {
+      console.error('No place found in handleMapLocationChanged');
     }
   };
 
@@ -38,6 +44,8 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           ref={inputRef}
           type="text"
           placeholder="Enter a location"
+          value={value}                                     // controlled
+          onChange={(e) => onChangeText(e.target.value)}    // controlled
           style={{
             width: '100%',
             padding: '10px',
@@ -50,6 +58,6 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       </Autocomplete>
     </Box>
   );
-}
+};
 
 export default LocationAutocomplete;
