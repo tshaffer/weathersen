@@ -2,7 +2,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
-import AppShell from './components/AppShell';
+import WeathersenPage from './components/WeathersenPage';
 import { initializeDiagnostics, loadEnvConfig } from './utilities';
 
 import { BrowserRouter } from 'react-router-dom';
@@ -19,7 +19,7 @@ loadEnvConfig().then(() => {
     <StrictMode>
       <Provider store={store}>
         <BrowserRouter>
-          <AppShell />
+          <WeathersenPage />
         </BrowserRouter>
       </Provider>
     </StrictMode>
