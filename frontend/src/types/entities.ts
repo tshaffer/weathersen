@@ -1,5 +1,5 @@
 export interface ItineraryState {
-  itineraryStops: ItineraryStop[];
+  itineraryStops: ItineraryStop[] | null[] | undefined[];
 }
 
 export interface ItineraryStop {

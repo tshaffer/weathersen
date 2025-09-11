@@ -103,9 +103,9 @@ export default function ItineraryInput({
     [locationSuggestions]
   );
 
-  const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string): Promise<void> => {
+  const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string, index: number): Promise<void> => {
     console.log("Selected location:", location);
-    dispatch(fetchForecast({ location, date }));
+    dispatch(fetchForecast({ location, date, index }));
     // const res = await axios.get('/api/v1/forecast', {
     //   params: { location: JSON.stringify(location), date },
     // });
@@ -196,7 +196,7 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               value={stop.location}
                               onChangeText={(text) => updateStop(idx, { location: text })}
-                              onSetMapLocation={(location) => handleSetMapLocation(location, stop.date)}
+                              onSetMapLocation={(location) => handleSetMapLocation(location, stop.date, idx)}
                             />
                             {/* <Autocomplete
                               freeSolo
