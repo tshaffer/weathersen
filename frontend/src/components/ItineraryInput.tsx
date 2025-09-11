@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMemo, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Button,
@@ -28,6 +29,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import axios from "axios";
+import { AppDispatch } from "../redux/store";
+import { fetchForecast } from "../redux/itinerarySlice";
 
 // ---------------- Types ----------------
 export type ItineraryStop = {
@@ -70,6 +73,9 @@ export default function ItineraryInput({
   defaultDate,
   locationSuggestions,
 }: ItineraryInputProps) {
+
+  const dispatch = useDispatch<AppDispatch>();
+
   const [internal, setInternal] = useState<Itinerary>([
     // Start with a single empty stop dated today by default
     newStop(defaultDate ?? dayjs()),
@@ -99,12 +105,11 @@ export default function ItineraryInput({
 
   const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string): Promise<void> => {
     console.log("Selected location:", location);
-    // dispatch(setCurrentMapLocation(location));
-
-    const res = await axios.get('/api/v1/forecast', {
-      params: { location: JSON.stringify(location), date },
-    });
-    console.log('Forecast response:', res.data);
+    dispatch(fetchForecast({ location, date }));
+    // const res = await axios.get('/api/v1/forecast', {
+    //   params: { location: JSON.stringify(location), date },
+    // });
+    // console.log('Forecast response:', res.data);
   };
 
   const addStop = () => {
