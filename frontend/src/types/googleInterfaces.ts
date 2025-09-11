@@ -1,20 +1,20 @@
 export interface ForecastDayPart {
-  humidity?: { percent: number; unit: string };
-  dewPoint?: { value: number; unit: string };
-  wetBulbTemperature?: { value: number; unit: string };
-  windSpeed?: { speed: { value: number; unit: string }; direction?: { degrees: number; localizedDescription?: string } };
-  windGust?: { value: number; unit: string };
-  windChill?: { value: number; unit: string };
-  visibility?: { value: number; unit: string };
-  seaLevelPressure?: { value: number; unit: string };
-  sunEvents?: {
-    sunrise?: string;
-    sunset?: string;
-  };
-  moonEvents?: {
-    moonrise?: string;
-    moonset?: string;
-  };
+  // humidity?: { percent: number; unit: string };
+  // dewPoint?: { value: number; unit: string };
+  // wetBulbTemperature?: { value: number; unit: string };
+  // windSpeed?: { speed: { value: number; unit: string }; direction?: { degrees: number; localizedDescription?: string } };
+  // windGust?: { value: number; unit: string };
+  // windChill?: { value: number; unit: string };
+  // visibility?: { value: number; unit: string };
+  // seaLevelPressure?: { value: number; unit: string };
+  // sunEvents?: {
+  //   sunrise?: string;
+  //   sunset?: string;
+  // };
+  // moonEvents?: {
+  //   moonrise?: string;
+  //   moonset?: string;
+  // };
   interval?: { startTime: string; endTime: string }; // *
   weatherCondition?: { description: string, type: string }; // *
   precipitation?: {
@@ -51,8 +51,3 @@ export interface DailyForecastDay {
   };
 }
 
-export interface ForecastDaysResponse {
-  forecastDays: DailyForecastDay[];
-  timeZone?: { id: string };
-  nextPageToken?: string;
-}
