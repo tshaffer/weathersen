@@ -1,6 +1,5 @@
-import * as React from "react";
-import { useMemo, useState } from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from "react";
+import { useDispatch } from 'react-redux';
 import {
   Box,
   Button,
@@ -9,7 +8,6 @@ import {
   Divider,
   IconButton,
   Stack,
-  TextField,
   Typography,
   Dialog,
   DialogTitle,
@@ -17,7 +15,6 @@ import {
   DialogActions,
   Tooltip,
 } from "@mui/material";
-import Autocomplete from "@mui/material/Autocomplete";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
@@ -28,7 +25,6 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
-import axios from "axios";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
 
@@ -46,7 +42,6 @@ export type ItineraryInputProps = {
   onChange?: (next: Itinerary) => void; // fires whenever itinerary changes
   onClear?: () => void; // fires when user clears the trip
   defaultDate?: Dayjs; // default date for newly added stops
-  locationSuggestions?: string[]; // optional static suggestions for Autocomplete
 };
 
 // Utility to format ISO date (yyyy-mm-dd)
@@ -71,7 +66,6 @@ export default function ItineraryInput({
   onChange,
   onClear,
   defaultDate,
-  locationSuggestions,
 }: ItineraryInputProps) {
 
   const dispatch = useDispatch<AppDispatch>();
@@ -88,28 +82,9 @@ export default function ItineraryInput({
     if (!value) setInternal(next);
   };
 
-  const suggestions = useMemo(
-    () =>
-      locationSuggestions ?? [
-        "San Francisco, CA",
-        "Portland, OR",
-        "Seattle, WA",
-        "Vancouver, BC",
-        "Paris, France",
-        "London, UK",
-        "Tokyo, Japan",
-        "Lisbon, Portugal",
-      ],
-    [locationSuggestions]
-  );
-
   const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string, index: number): Promise<void> => {
     console.log("Selected location:", location);
     dispatch(fetchForecast({ location, date, index }));
-    // const res = await axios.get('/api/v1/forecast', {
-    //   params: { location: JSON.stringify(location), date },
-    // });
-    // console.log('Forecast response:', res.data);
   };
 
   const addStop = () => {
@@ -198,17 +173,6 @@ export default function ItineraryInput({
                               onChangeText={(text) => updateStop(idx, { location: text })}
                               onSetMapLocation={(location) => handleSetMapLocation(location, stop.date, idx)}
                             />
-                            {/* <Autocomplete
-                              freeSolo
-                              options={suggestions}
-                              value={stop.location}
-                              onInputChange={(_, newValue) => updateStop(idx, { location: newValue })}
-                              sx={{ flex: 1, minWidth: 240 }}
-                              renderInput={(params) => (
-                                <TextField {...params} label="Location" placeholder="City, place, or address" />
-                              )}
-                            /> */}
-
                             <DatePicker
                               label="Date"
                               value={stop.date ? dayjs(stop.date) : null}
