@@ -24,7 +24,7 @@ async function main() {
   app.get('/env-config.json', (_req, res) => {
     res.json({
       BACKEND_URL: process.env.BACKEND_URL ?? '',
-      // MAPS_API_KEY: process.env.MAPS_API_KEY ?? ''
+      GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY ?? '',
     });
   });
 
