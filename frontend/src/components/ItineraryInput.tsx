@@ -26,6 +26,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import LocationAutocomplete from "./LocationAutocomplete";
 
 // ---------------- Types ----------------
 export type ItineraryStop = {
@@ -94,6 +95,12 @@ export default function ItineraryInput({
       ],
     [locationSuggestions]
   );
+
+  const handleSetMapLocation = (location: google.maps.LatLngLiteral): void => {
+    console.log("Selected location:", location);
+    // dispatch(setCurrentMapLocation(location));
+  }
+
 
   const addStop = () => {
     const base = itinerary.length
@@ -176,7 +183,11 @@ export default function ItineraryInput({
                               Day {idx + 1}
                             </Typography>
 
-                            <Autocomplete
+                            <LocationAutocomplete
+                              onSetMapLocation={handleSetMapLocation}
+                            />
+
+                            {/* <Autocomplete
                               freeSolo
                               options={suggestions}
                               value={stop.location}
@@ -185,7 +196,7 @@ export default function ItineraryInput({
                               renderInput={(params) => (
                                 <TextField {...params} label="Location" placeholder="City, place, or address" />
                               )}
-                            />
+                            /> */}
 
                             <DatePicker
                               label="Date"

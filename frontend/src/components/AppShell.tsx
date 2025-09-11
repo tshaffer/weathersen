@@ -29,6 +29,8 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
+import GoogleMapsProvider from './GoogleMapsProvider';
+
 import ItineraryInput, { Itinerary, ItineraryStop } from './ItineraryInput';
 
 // ---------------------- Types ----------------------
@@ -122,45 +124,47 @@ function mergeItineraryWithForecasts(itinerary: Itinerary, samples: Forecast[]):
 const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
   const [open, setOpen] = useState(false);
   return (
-    <>
-      <TableRow hover sx={{ '& .MuiTableCell-root': { py: 0.75 } }}>
-        <TableCell width={40} padding="checkbox">
-          <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Collapse' : 'Expand'}>
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
-        </TableCell>
-        <TableCell>{row.date || '—'}</TableCell>
-        <TableCell>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="body2">{row.location || '—'}</Typography>
-            {typeof row.precipChancePct === 'number' && row.precipChancePct >= 40 && (
-              <Chip size="small" label="Rain" color="primary" variant="outlined" />
-            )}
-          </Stack>
-        </TableCell>
-        <TableCell align="right">{formatTemp(row.minTempC)}</TableCell>
-        <TableCell align="right">{formatTemp(row.maxTempC)}</TableCell>
-        <TableCell align="right">{formatPct(row.precipChancePct)}</TableCell>
-        <TableCell sx={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {row.summary ?? '—'}
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box px={2} pb={1}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap flexWrap="wrap">
-                <Typography variant="caption">UV: {row.uvIndex ?? '—'}</Typography>
-                <Typography variant="caption">Clouds: {formatPct(row.cloudCoverPct)}</Typography>
-                <Typography variant="caption">Wind: {row.windKph ? `${row.windKph} kph` : '—'}</Typography>
-                <Typography variant="caption">Sunrise: {row.sunrise ?? '—'}</Typography>
-                <Typography variant="caption">Sunset: {row.sunset ?? '—'}</Typography>
-              </Stack>
-            </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
-    </>
+    <GoogleMapsProvider>
+      <>
+        <TableRow hover sx={{ '& .MuiTableCell-root': { py: 0.75 } }}>
+          <TableCell width={40} padding="checkbox">
+            <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Collapse' : 'Expand'}>
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+          <TableCell>{row.date || '—'}</TableCell>
+          <TableCell>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="body2">{row.location || '—'}</Typography>
+              {typeof row.precipChancePct === 'number' && row.precipChancePct >= 40 && (
+                <Chip size="small" label="Rain" color="primary" variant="outlined" />
+              )}
+            </Stack>
+          </TableCell>
+          <TableCell align="right">{formatTemp(row.minTempC)}</TableCell>
+          <TableCell align="right">{formatTemp(row.maxTempC)}</TableCell>
+          <TableCell align="right">{formatPct(row.precipChancePct)}</TableCell>
+          <TableCell sx={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {row.summary ?? '—'}
+          </TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Box px={2} pb={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap flexWrap="wrap">
+                  <Typography variant="caption">UV: {row.uvIndex ?? '—'}</Typography>
+                  <Typography variant="caption">Clouds: {formatPct(row.cloudCoverPct)}</Typography>
+                  <Typography variant="caption">Wind: {row.windKph ? `${row.windKph} kph` : '—'}</Typography>
+                  <Typography variant="caption">Sunrise: {row.sunrise ?? '—'}</Typography>
+                  <Typography variant="caption">Sunset: {row.sunset ?? '—'}</Typography>
+                </Stack>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      </>
+    </GoogleMapsProvider>
   );
 };
 
