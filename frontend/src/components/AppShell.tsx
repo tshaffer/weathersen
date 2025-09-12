@@ -1,5 +1,7 @@
 // AppShell.tsx
 import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
 import {
   AppBar,
   Box,
@@ -20,7 +22,6 @@ import {
   Divider,
   Chip,
   Stack,
-  Button,
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
@@ -29,97 +30,16 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
-import ItineraryInput, { Itinerary, ItineraryStop } from './ItineraryInput';
-
-// ---------------------- Types ----------------------
-// Make these optional so we can display placeholders before we have real data:
-interface Forecast {
-  id: string;
-  date: string;
-  location: string;
-  minTempC?: number;
-  maxTempC?: number;
-  precipChancePct?: number;
-  windKph?: number;
-  uvIndex?: number;
-  cloudCoverPct?: number;
-  sunrise?: string;
-  sunset?: string;
-  summary?: string;
-}
-
-// ---------------------- Sample Data ----------------------
-const sampleData: Forecast[] = [
-  {
-    id: 'sf-2025-09-10',
-    date: '2025-09-10',
-    location: 'San Francisco, CA',
-    minTempC: 16,
-    maxTempC: 22,
-    precipChancePct: 10,
-    windKph: 14,
-    uvIndex: 6,
-    cloudCoverPct: 90,
-    sunrise: '06:48',
-    sunset: '19:15',
-    summary: 'Mostly cloudy, light winds',
-  },
-  {
-    id: 'la-2025-09-11',
-    date: '2025-09-11',
-    location: 'Los Angeles, CA',
-    minTempC: 18,
-    maxTempC: 28,
-    precipChancePct: 0,
-    windKph: 9,
-    uvIndex: 8,
-    cloudCoverPct: 10,
-    sunrise: '06:33',
-    sunset: '19:09',
-    summary: 'Sunny and warm',
-  },
-  {
-    id: 'pdx-2025-09-12',
-    date: '2025-09-12',
-    location: 'Portland, OR',
-    minTempC: 12,
-    maxTempC: 20,
-    precipChancePct: 45,
-    windKph: 12,
-    uvIndex: 5,
-    cloudCoverPct: 70,
-    sunrise: '06:45',
-    sunset: '19:29',
-    summary: 'Showers likely in afternoon',
-  },
-];
+import ItineraryInput from './ItineraryInput';
+import { Itinerary, ItineraryState, ItineraryStop } from '../types';
+import { clearItinerary, setItinerary } from '../redux/itinerarySlice';
 
 // ---------------------- Utilities ----------------------
 const formatTemp = (c?: number) => (typeof c === 'number' ? `${c.toFixed(0)}°C` : '—');
 const formatPct = (n?: number) => (typeof n === 'number' ? `${n}%` : '—');
 
-const keyFor = (loc: string, date: string) =>
-  `${(loc || '').toLowerCase().trim()}|${(date || '').trim()}`;
-
-function mergeItineraryWithForecasts(itinerary: Itinerary, samples: Forecast[]): Forecast[] {
-  const sampleIndex = new Map(samples.map(s => [keyFor(s.location, s.date), s]));
-  return itinerary
-    .filter(s => s.location || s.date) // ignore completely blank rows
-    .map((s) => {
-      const sample = sampleIndex.get(keyFor(s.location, s.date));
-      if (sample) return sample;
-      // Placeholder row until real fetch wires in:
-      return {
-        id: `it-${s.id}`,
-        date: s.date,
-        location: s.location,
-        summary: '—',
-      } as Forecast;
-    });
-}
-
 // ---------------------- Compact Expandable Row ----------------------
-const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
+const CompactRow: React.FC<{ row: ItineraryStop }> = ({ row }) => {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -133,16 +53,17 @@ const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
         <TableCell>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="body2">{row.location || '—'}</Typography>
-            {typeof row.precipChancePct === 'number' && row.precipChancePct >= 40 && (
+            {typeof row.forecast?.daytimeForecast?.precipitation?.probability === 'number' && row.forecast?.daytimeForecast?.precipitation?.probability >= 40 && (
               <Chip size="small" label="Rain" color="primary" variant="outlined" />
             )}
           </Stack>
         </TableCell>
-        <TableCell align="right">{formatTemp(row.minTempC)}</TableCell>
-        <TableCell align="right">{formatTemp(row.maxTempC)}</TableCell>
-        <TableCell align="right">{formatPct(row.precipChancePct)}</TableCell>
+        <TableCell align="right">{formatTemp(row.forecast?.minTemperature?.degrees)}</TableCell>
+        <TableCell align="right">{formatTemp(row.forecast?.maxTemperature?.degrees)}</TableCell>
+        <TableCell align="right">{formatPct(row.forecast?.daytimeForecast?.precipitation?.probability)}</TableCell>
         <TableCell sx={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {row.summary ?? '—'}
+          {/* {row.summary ?? '—'} */}
+          Summary
         </TableCell>
       </TableRow>
       <TableRow>
@@ -150,11 +71,11 @@ const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box px={2} pb={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap flexWrap="wrap">
-                <Typography variant="caption">UV: {row.uvIndex ?? '—'}</Typography>
-                <Typography variant="caption">Clouds: {formatPct(row.cloudCoverPct)}</Typography>
-                <Typography variant="caption">Wind: {row.windKph ? `${row.windKph} kph` : '—'}</Typography>
-                <Typography variant="caption">Sunrise: {row.sunrise ?? '—'}</Typography>
-                <Typography variant="caption">Sunset: {row.sunset ?? '—'}</Typography>
+                <Typography variant="caption">UV: {row.forecast?.daytimeForecast?.uvIndex ?? '—'}</Typography>
+                <Typography variant="caption">Clouds: {formatPct(row.forecast?.daytimeForecast?.cloudCover ?? 0)}</Typography>
+                <Typography variant="caption">Wind: {row.forecast?.daytimeForecast?.wind?.speed.value ? `${row.forecast?.daytimeForecast?.wind?.speed.value} kph` : '—'}</Typography>
+                <Typography variant="caption">Sunrise: {row.forecast?.sunEvents?.sunrise ?? '—'}</Typography>
+                <Typography variant="caption">Sunset: {row.forecast?.sunEvents?.sunset ?? '—'}</Typography>
               </Stack>
             </Box>
           </Collapse>
@@ -165,7 +86,10 @@ const CompactRow: React.FC<{ row: Forecast }> = ({ row }) => {
 };
 
 // ---------------------- Summary Table ----------------------
-const SummaryTable: React.FC<{ rows: Forecast[] }> = ({ rows }) => {
+const SummaryTable: React.FC<{ rows: ItineraryStop[] }> = ({ rows }) => {
+  if (!rows[0]) {
+    return <Typography variant="body2">Add itinerary stops to see the summary table.</Typography>;
+  }
   return (
     <TableContainer component={Paper}>
       <Table size="small" stickyHeader>
@@ -192,17 +116,29 @@ const SummaryTable: React.FC<{ rows: Forecast[] }> = ({ rows }) => {
 
 // ---------------------- AppShell ----------------------
 const AppShell: React.FC = () => {
+
+    const dispatch = useDispatch<AppDispatch>();
+
+  const itinerary: ItineraryState = useSelector((state: RootState) => state.itinerary);
+  const rows: (ItineraryStop | null)[] = itinerary.itineraryStops;
+
   // 1) Own the itinerary here so ItineraryInput + SummaryTable share the same data
-  const [itinerary, setItinerary] = useState<Itinerary>([
-    // seed with one empty stop (today) — ItineraryInput will display it:
-    { id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) },
-  ]);
+  // const [itinerary, setItinerary] = useState<Itinerary>([
+  //   // seed with one empty stop (today) — ItineraryInput will display it:
+  //   { id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) },
+  // ]);
 
   // 2) Rows are derived from itinerary + any available forecast data
-  const rows = useMemo(() => mergeItineraryWithForecasts(itinerary, sampleData), [itinerary]);
+  // const rows = useMemo(() => mergeItineraryWithForecasts(itinerary, sampleData), [itinerary]);
+
+  const handleUpdateItinerary = (newItinerary: Itinerary) => {
+    console.log("handleUpdateItinerary:", newItinerary);
+    dispatch(setItinerary(newItinerary));
+  };
 
   const handleClear = () => {
-    setItinerary([{ id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) }]);
+    dispatch(clearItinerary());
+    // setItinerary([{ id: crypto.randomUUID(), location: '', date: new Date().toISOString().slice(0, 10) }]);
   };
 
   return (
@@ -225,17 +161,17 @@ const AppShell: React.FC = () => {
         {/* Itinerary Input */}
         <Box mb={2}>
           <ItineraryInput
-            value={itinerary}
-            onChange={setItinerary}
+            value={itinerary.itineraryStops as ItineraryStop[]}
+            onChange={handleUpdateItinerary}
             onClear={handleClear}
           />
         </Box>
 
         {/* Summary table derived from itinerary */}
-        <Typography variant="subtitle1" gutterBottom>
+        {/* <Typography variant="subtitle1" gutterBottom>
           Forecast overview with expandable rows for details
         </Typography>
-        <SummaryTable rows={rows} />
+        <SummaryTable rows={rows as ItineraryStop[]} /> */}
       </Container>
 
       <Box component="footer" sx={{ py: 2, borderTop: 1, borderColor: 'divider' }}>

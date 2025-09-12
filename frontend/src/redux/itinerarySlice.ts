@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { ItineraryState } from '../types';
+import { FetchForecastResponse, ItineraryState, ItineraryStop } from '../types';
+import { current } from 'immer';
 
 export const fetchForecast = createAsyncThunk(
   'forecast/fetchForecast',
@@ -12,8 +13,14 @@ export const fetchForecast = createAsyncThunk(
   }
 );
 
+const placeholderStop: ItineraryStop = {
+  id: crypto.randomUUID(),
+  date: new Date().toISOString().slice(0, 10),
+  location: '',
+};
+
 const initialState: ItineraryState = {
-  itineraryStops: [null, null, null, null, null, null, null, null, null, null],
+  itineraryStops: [placeholderStop],
 };
 
 type DisplayDate = { year: number; month: number; day: number };
@@ -32,15 +39,26 @@ const itinerarySlice = createSlice({
   name: 'itinerary',
   initialState,
   reducers: {
+    setItinerary(state, action: PayloadAction<ItineraryStop[]>) {
+      state.itineraryStops = action.payload;
+    },
+    clearItinerary(state) {
+      state.itineraryStops = [placeholderStop];
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchForecast.fulfilled, (state, action: PayloadAction<any>) => {
-      // Handle the fulfilled state of fetchForecast
+
       console.log('Forecast fetched:', action.payload);
 
-      for (const day of action.payload.days) {
-        if (matchesDisplayDate(action.payload.date, day.displayDate)) {
-          state.itineraryStops![action.payload.index] = day;
+      const fetchForecastResponse: FetchForecastResponse = action.payload;
+      const { days: forecast, date, index } = fetchForecastResponse;
+
+      for (const dailyForecast of forecast) {
+        if (matchesDisplayDate(action.payload.date, dailyForecast.displayDate)) {
+          console.log('Plain object before:', current(state.itineraryStops[index]));
+          state.itineraryStops![action.payload.index].forecast = dailyForecast;
+          console.log('Plain object after:', current(state.itineraryStops[index]));
           break;
         }
       }
@@ -48,7 +66,10 @@ const itinerarySlice = createSlice({
   },
 });
 
-export const {} = itinerarySlice.actions;
+export const {
+  setItinerary,
+  clearItinerary
+} = itinerarySlice.actions;
 
 export default itinerarySlice.reducer;
 
