@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 import {
   Box,
   Button,
@@ -14,11 +14,15 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
+  Chip,
+  Collapse,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -27,15 +31,9 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
+import { Itinerary, ItineraryStop } from "../types";
 
 // ---------------- Types ----------------
-export type ItineraryStop = {
-  id: string; // stable id for DnD
-  location: string;
-  date: string; // ISO yyyy-mm-dd
-};
-
-export type Itinerary = ItineraryStop[];
 
 export type ItineraryInputProps = {
   value?: Itinerary; // optional controlled value
@@ -53,6 +51,75 @@ const newStop = (date: Dayjs): ItineraryStop => ({
   date: toISODate(date),
 });
 
+// Helpers for displaying forecast values
+const fmtTemp = (c?: number) => (typeof c === "number" ? `${c.toFixed(0)}°C` : "—");
+const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
+
+// Compact forecast chip row + expand toggle
+function ForecastStrip({
+  stop,
+  open,
+  onToggle,
+}: {
+  stop: ItineraryStop;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const precip = stop.forecast?.daytimeForecast?.precipitation?.probability;
+  const min = stop.forecast?.minTemperature?.degrees;
+  const max = stop.forecast?.maxTemperature?.degrees;
+
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      gap={1}
+      sx={{ flexWrap: "wrap", ml: { xs: 0, sm: 1 } }}
+    >
+      <Typography variant="body2">Min {fmtTemp(min)}</Typography>
+      <Typography variant="body2">Max {fmtTemp(max)}</Typography>
+      <Typography variant="body2">Precip {fmtPct(precip)}</Typography>
+      {typeof precip === "number" && precip >= 40 && (
+        <Tooltip title="Higher chance of rain">
+          <Chip size="small" label="Rain" color="primary" variant="outlined" />
+        </Tooltip>
+      )}
+      <IconButton
+        size="small"
+        onClick={onToggle}
+        aria-label={open ? "Collapse details" : "Expand details"}
+      >
+        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+      </IconButton>
+    </Stack>
+  );
+}
+
+function ForecastDetails({ stop }: { stop: ItineraryStop }) {
+  const d = stop.forecast?.daytimeForecast;
+  const wind = d?.wind?.speed?.value;
+  const sunrise = stop.forecast?.sunEvents?.sunrise;
+  const sunset = stop.forecast?.sunEvents?.sunset;
+
+  return (
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={1.5}
+      useFlexGap
+      flexWrap="wrap"
+      sx={{ px: 1, pb: 1 }}
+    >
+      <Typography variant="caption">UV: {d?.uvIndex ?? "—"}</Typography>
+      <Typography variant="caption">Clouds: {fmtPct(d?.cloudCover)}</Typography>
+      <Typography variant="caption">
+        Wind: {typeof wind === "number" ? `${wind} kph` : "—"}
+      </Typography>
+      <Typography variant="caption">Sunrise: {sunrise ?? "—"}</Typography>
+      <Typography variant="caption">Sunset: {sunset ?? "—"}</Typography>
+    </Stack>
+  );
+}
+
 function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
@@ -67,7 +134,6 @@ export default function ItineraryInput({
   onClear,
   defaultDate,
 }: ItineraryInputProps) {
-
   const dispatch = useDispatch<AppDispatch>();
 
   const [internal, setInternal] = useState<Itinerary>([
@@ -76,14 +142,27 @@ export default function ItineraryInput({
   ]);
   const [showClearDialog, setShowClearDialog] = useState(false);
 
+  // simple expand/collapse state per row
+  const [openRows, setOpenRows] = useState<boolean[]>([]);
+  const toggleRow = (i: number) =>
+    setOpenRows((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
+
   const itinerary = value ?? internal;
   const setItinerary = (next: Itinerary) => {
     if (onChange) onChange(next);
     if (!value) setInternal(next);
   };
 
-  const handleSetMapLocation = async (location: google.maps.LatLngLiteral, date: string, index: number): Promise<void> => {
-    console.log("Selected location:", location);
+  const handleSetMapLocation = async (
+    location: google.maps.LatLngLiteral,
+    date: string,
+    index: number
+  ): Promise<void> => {
+    // When a place is set, fetch & store forecast for that stop (handled by the slice)
     dispatch(fetchForecast({ location, date, index }));
   };
 
@@ -96,9 +175,7 @@ export default function ItineraryInput({
   };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
-    setItinerary(
-      itinerary.map((s, i) => (i === idx ? { ...s, ...patch } : s))
-    );
+    setItinerary(itinerary.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   const deleteStop = (idx: number) => {
@@ -117,6 +194,7 @@ export default function ItineraryInput({
     const cleared = [newStop(dayjs())];
     if (onClear) onClear();
     setItinerary(cleared);
+    setOpenRows([]); // reset expanded rows
   };
 
   return (
@@ -159,8 +237,15 @@ export default function ItineraryInput({
                           className="rounded-2xl border border-gray-200"
                           sx={{ p: 1 }}
                         >
-                          <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ sm: "center" }} gap={1}>
-                            <Box {...drag.dragHandleProps} sx={{ display: "flex", alignItems: "center", px: 1 }}>
+                          <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            alignItems={{ sm: "center" }}
+                            gap={1}
+                          >
+                            <Box
+                              {...drag.dragHandleProps}
+                              sx={{ display: "flex", alignItems: "center", px: 1 }}
+                            >
                               <DragIndicatorIcon fontSize="small" />
                             </Box>
 
@@ -171,13 +256,23 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               value={stop.location}
                               onChangeText={(text) => updateStop(idx, { location: text })}
-                              onSetMapLocation={(location) => handleSetMapLocation(location, stop.date, idx)}
+                              onSetMapLocation={(location) =>
+                                handleSetMapLocation(location, stop.date, idx)
+                              }
                             />
+
                             <DatePicker
                               label="Date"
                               value={stop.date ? dayjs(stop.date) : null}
                               onChange={(d) => updateStop(idx, { date: toISODate(d) })}
                               slotProps={{ textField: { sx: { minWidth: 180 } } }}
+                            />
+
+                            {/* Inline compact forecast strip + expand/collapse */}
+                            <ForecastStrip
+                              stop={stop}
+                              open={!!openRows[idx]}
+                              onToggle={() => toggleRow(idx)}
                             />
 
                             <Tooltip title="Remove stop">
@@ -186,6 +281,11 @@ export default function ItineraryInput({
                               </IconButton>
                             </Tooltip>
                           </Stack>
+
+                          {/* Collapsible details under the row */}
+                          <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
+                            <ForecastDetails stop={stop} />
+                          </Collapse>
                         </Box>
                       )}
                     </Draggable>
@@ -201,7 +301,14 @@ export default function ItineraryInput({
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Current Itinerary (JSON)
             </Typography>
-            <pre style={{ background: "#f7f7f7", padding: 12, borderRadius: 12, overflow: "auto" }}>
+            <pre
+              style={{
+                background: "#f7f7f7",
+                padding: 12,
+                borderRadius: 12,
+                overflow: "auto",
+              }}
+            >
               {JSON.stringify(itinerary, null, 2)}
             </pre>
           </Box>
@@ -229,9 +336,8 @@ export default function ItineraryInput({
 }
 
 // ---------------- Usage Notes ----------------
-// 1) This component is self-contained and manages its own state unless you pass `value` + `onChange`.
-// 2) For production, swap the Autocomplete `options` with a Places service (Google Places, Mapbox, or OpenStreetMap Nominatim).
-//    You can still keep `freeSolo` so users can type arbitrary locations.
-// 3) The `@hello-pangea/dnd` package handles drag-and-drop reordering; ensure it's installed.
-// 4) MUI Date Picker requires @mui/x-date-pickers and dayjs.
-// 5) The JSON preview at the bottom is for developer testing; you can remove it later.
+// 1) This component now inlines forecast info per row (Min/Max/Precip + Rain chip) with
+//    expandable details (UV, clouds, wind, sunrise/sunset).
+// 2) Your slice should write fetched forecast onto itineraryStops[index].forecast so it
+//    appears here with no extra local state.
+// 3) With this in place, you can remove the SummaryTable usage from AppShell.
