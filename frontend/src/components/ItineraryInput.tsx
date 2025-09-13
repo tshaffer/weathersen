@@ -36,10 +36,9 @@ import { Itinerary, ItineraryStop } from "../types";
 // ---------------- Types ----------------
 
 export type ItineraryInputProps = {
-  value?: Itinerary; // optional controlled value
-  onChange?: (next: Itinerary) => void; // fires whenever itinerary changes
-  onClear?: () => void; // fires when user clears the trip
-  defaultDate?: Dayjs; // default date for newly added stops
+  value: Itinerary;
+  onChange: (next: Itinerary) => void;
+  onClear?: () => void;
 };
 
 // Utility to format ISO date (yyyy-mm-dd)
@@ -132,14 +131,9 @@ export default function ItineraryInput({
   value,
   onChange,
   onClear,
-  defaultDate,
 }: ItineraryInputProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const [internal, setInternal] = useState<Itinerary>([
-    // Start with a single empty stop dated today by default
-    newStop(defaultDate ?? dayjs()),
-  ]);
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   // simple expand/collapse state per row
@@ -151,18 +145,14 @@ export default function ItineraryInput({
       return next;
     });
 
-  const itinerary = value ?? internal;
-  const setItinerary = (next: Itinerary) => {
-    if (onChange) onChange(next);
-    if (!value) setInternal(next);
-  };
+  const itinerary = value;
+  const setItinerary = onChange;
 
   const handleSetMapLocation = async (
     location: google.maps.LatLngLiteral,
     date: string,
     index: number
   ): Promise<void> => {
-    // When a place is set, fetch & store forecast for that stop (handled by the slice)
     dispatch(fetchForecast({ location, date, index }));
   };
 
@@ -180,7 +170,7 @@ export default function ItineraryInput({
 
   const deleteStop = (idx: number) => {
     const next = itinerary.filter((_, i) => i !== idx);
-    setItinerary(next.length ? next : [newStop(dayjs())]);
+    setItinerary(next);
   };
 
   const handleDragEnd = (result: any) => {
@@ -191,10 +181,8 @@ export default function ItineraryInput({
 
   const handleClear = () => {
     setShowClearDialog(false);
-    const cleared = [newStop(dayjs())];
-    if (onClear) onClear();
-    setItinerary(cleared);
-    setOpenRows([]); // reset expanded rows
+    onClear?.(); // Redux will reset to initialState with placeHolderStop
+    setOpenRows([]); // only local UI reset
   };
 
   return (
