@@ -170,8 +170,10 @@ export default function ItineraryInput({
     console.log('value:', value);
     console.log(idx, date);
     const patch = { date };
+    if (value[idx].locationCoordinates) {
+      dispatch(fetchForecast({ location: value[idx].locationCoordinates, date, index: idx }));
+    }
     updateStop(idx, patch);
-    // dispatch(fetchForecast({ location: value[idx].location, date, idx }));
   };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
