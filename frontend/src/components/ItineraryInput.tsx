@@ -334,10 +334,3 @@ export default function ItineraryInput({
     </LocalizationProvider>
   );
 }
-
-// ---------------- Usage Notes ----------------
-// 1) This component now inlines forecast info per row (Min/Max/Precip + Rain chip) with
-//    expandable details (UV, clouds, wind, sunrise/sunset).
-// 2) Your slice should write fetched forecast onto itineraryStops[index].forecast so it
-//    appears here with no extra local state.
-// 3) With this in place, you can remove the SummaryTable usage from AppShell.
