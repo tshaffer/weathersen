@@ -149,11 +149,12 @@ export default function ItineraryInput({
   const setItinerary = onChange;
 
   const handleSetMapLocation = async (
-    location: google.maps.LatLngLiteral,
+    locationCoordinates: google.maps.LatLngLiteral,
     date: string,
     index: number
   ): Promise<void> => {
-    dispatch(fetchForecast({ location, date, index }));
+    dispatch(fetchForecast({ location: locationCoordinates, date, index }));
+    updateStop(index, { locationCoordinates });
   };
 
   const addStop = () => {
@@ -162,6 +163,15 @@ export default function ItineraryInput({
       : dayjs();
     const nextDate = base.add(1, "day");
     setItinerary([...itinerary, newStop(nextDate)]);
+  };
+
+  const updateStopDate = (idx: number, date: string) => {
+    console.log('updateStopDate called');
+    console.log('value:', value);
+    console.log(idx, date);
+    const patch = { date };
+    updateStop(idx, patch);
+    // dispatch(fetchForecast({ location: value[idx].location, date, idx }));
   };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
@@ -244,15 +254,15 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               value={stop.location}
                               onChangeText={(text) => updateStop(idx, { location: text })}
-                              onSetMapLocation={(location) =>
-                                handleSetMapLocation(location, stop.date, idx)
+                              onSetMapLocation={(locationCoordinates: google.maps.LatLngLiteral) =>
+                                handleSetMapLocation(locationCoordinates, stop.date, idx)
                               }
                             />
 
                             <DatePicker
                               label="Date"
                               value={stop.date ? dayjs(stop.date) : null}
-                              onChange={(d) => updateStop(idx, { date: toISODate(d) })}
+                              onChange={(d) => updateStopDate(idx, toISODate(d) )}
                               slotProps={{ textField: { sx: { minWidth: 180 } } }}
                             />
 

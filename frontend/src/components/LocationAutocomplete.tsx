@@ -19,16 +19,16 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
   const handleMapLocationChanged = () => {
     if (!mapAutocompleteRef.current) return;
-    const place = mapAutocompleteRef.current.getPlace();
+    const place: google.maps.places.PlaceResult = mapAutocompleteRef.current.getPlace();
     if (place?.geometry?.location) {
-      const newCoordinates = {
+      const locationCoordinates: google.maps.LatLngLiteral = {
         lat: place.geometry.location.lat(),
         lng: place.geometry.location.lng(),
       };
       // Use the formatted address (or fallback to description) as the text value
       const text = place.formatted_address ?? place.name ?? '';
       onChangeText(text);                 // keep itinerary text in sync
-      onSetMapLocation(newCoordinates);   // let caller store lat/lng if desired
+      onSetMapLocation(locationCoordinates);   // let caller store lat/lng if desired
     } else {
       console.error('No place found in handleMapLocationChanged');
     }
