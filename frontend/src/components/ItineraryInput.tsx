@@ -32,6 +32,7 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
 import { Itinerary, ItineraryStop } from "../types";
+import { fmtTempF } from "../utilities";
 
 // ---------------- Types ----------------
 
@@ -51,7 +52,6 @@ const newStop = (date: Dayjs): ItineraryStop => ({
 });
 
 // Helpers for displaying forecast values
-const fmtTemp = (c?: number) => (typeof c === "number" ? `${c.toFixed(0)}°C` : "—");
 const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
 
 // Compact forecast chip row + expand toggle
@@ -75,8 +75,8 @@ function ForecastStrip({
       gap={1}
       sx={{ flexWrap: "wrap", ml: { xs: 0, sm: 1 } }}
     >
-      <Typography variant="body2">Min {fmtTemp(min)}</Typography>
-      <Typography variant="body2">Max {fmtTemp(max)}</Typography>
+      <Typography variant="body2">Min {fmtTempF(min)}</Typography>
+      <Typography variant="body2">Max {fmtTempF(max)}</Typography>
       <Typography variant="body2">Precip {fmtPct(precip)}</Typography>
       {typeof precip === "number" && precip >= 40 && (
         <Tooltip title="Higher chance of rain">
