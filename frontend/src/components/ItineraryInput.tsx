@@ -35,6 +35,7 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
 import { Itinerary, ItineraryStop } from "../types";
+import { fmtTempF } from "../utilities";
 
 // ---------------- Types ----------------
 
@@ -102,6 +103,10 @@ function WeatherInline({ stop }: { stop: ItineraryStop }) {
   const precip = d?.precipitation?.probability;
   const windMph = toMph(d?.wind?.speed?.value);
 
+  // Hi/Lo (display F, source values assumed °C)
+  const hi = fmtTempF(stop.forecast?.maxTemperature?.degrees); // High first
+  const lo = fmtTempF(stop.forecast?.minTemperature?.degrees); // then Low
+
   const { label, IconComp } = conditionFromForecast(stop);
 
   return (
@@ -111,6 +116,13 @@ function WeatherInline({ stop }: { stop: ItineraryStop }) {
       spacing={1.25}
       sx={{ flexWrap: "nowrap", ml: 1, whiteSpace: "nowrap" }}
     >
+      {/* Hi/Lo */}
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 72 }}>
+        <Typography variant="body2" fontWeight={700}>
+          {hi}/{lo}
+        </Typography>
+      </Stack>
+
       {/* Condition icon + text */}
       <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
         <IconComp fontSize="small" />
