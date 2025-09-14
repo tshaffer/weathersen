@@ -34,7 +34,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { Itinerary, ItineraryStop } from "../types";
+import { ForecastDayPart, Itinerary, ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
 
 // ---------------- Types ----------------
@@ -62,40 +62,53 @@ const toMph = (kph?: number) =>
 // Derive a condition label + icon from the forecast.
 // Prefers a phrase/summary if present; otherwise uses precip/cloud cover heuristics.
 function conditionFromForecast(stop: ItineraryStop): { label: string; IconComp: typeof WbSunnyIcon } {
-  const d = stop.forecast?.daytimeForecast as any;
-  const phrase: string | undefined =
-    d?.condition?.phrase || d?.summary || d?.shortDescription;
+  
+  console.log('conditionFromForecast stop:', stop);
 
-  const precip = d?.precipitation?.probability as number | undefined;
-  const cloud = d?.cloudCover as number | undefined;
+  const daytimeForecast = stop.forecast?.daytimeForecast as ForecastDayPart | undefined;
+  if (!daytimeForecast) return { label: "—", IconComp: WbSunnyIcon };
+  
+  const weatherCondition: WeatherCondition | undefined = daytimeForecast?.weatherCondition;
+  if (!weatherCondition) return { label: "—", IconComp: WbSunnyIcon };
 
-  let label = "—";
-  let IconComp = WbSunnyIcon;
+  console.log(weatherCondition.type);
+  
+  return { label: weatherCondition.description.text || "—", IconComp: WbSunnyIcon };
 
-  if (phrase && typeof phrase === "string") {
-    label = phrase;
-    const p = phrase.toLowerCase();
-    if (p.includes("rain") || p.includes("shower") || p.includes("storm")) IconComp = ThunderstormIcon;
-    else if (p.includes("cloud")) IconComp = p.includes("partly") ? CloudQueueIcon : CloudIcon;
-    else if (p.includes("sun") || p.includes("clear")) IconComp = WbSunnyIcon;
-  } else {
-    if (typeof precip === "number" && precip >= 50) {
-      label = "Rain";
-      IconComp = ThunderstormIcon;
-    } else if (typeof cloud === "number") {
-      if (cloud <= 20) {
-        label = "Sunny";
-        IconComp = WbSunnyIcon;
-      } else if (cloud <= 60) {
-        label = "Partly Cloudy";
-        IconComp = CloudQueueIcon;
-      } else {
-        label = "Cloudy";
-        IconComp = CloudIcon;
-      }
-    }
-  }
-  return { label, IconComp };
+  // Prefer a phrase/summary if present
+  // const phrase: string | undefined =
+  //   daytimeForecast?.weatherCondition?.phrase || daytimeForecast?.summary || daytimeForecast?.shortDescription;
+
+  // const precip = daytimeForecast?.precipitation?.probability as number | undefined;
+  // const cloud = daytimeForecast?.cloudCover as number | undefined;
+
+  // let label = "—";
+  // let IconComp = WbSunnyIcon;
+
+  // if (phrase && typeof phrase === "string") {
+  //   label = phrase;
+  //   const p = phrase.toLowerCase();
+  //   if (p.includes("rain") || p.includes("shower") || p.includes("storm")) IconComp = ThunderstormIcon;
+  //   else if (p.includes("cloud")) IconComp = p.includes("partly") ? CloudQueueIcon : CloudIcon;
+  //   else if (p.includes("sun") || p.includes("clear")) IconComp = WbSunnyIcon;
+  // } else {
+  //   if (typeof precip === "number" && precip >= 50) {
+  //     label = "Rain";
+  //     IconComp = ThunderstormIcon;
+  //   } else if (typeof cloud === "number") {
+  //     if (cloud <= 20) {
+  //       label = "Sunny";
+  //       IconComp = WbSunnyIcon;
+  //     } else if (cloud <= 60) {
+  //       label = "Partly Cloudy";
+  //       IconComp = CloudQueueIcon;
+  //     } else {
+  //       label = "Cloudy";
+  //       IconComp = CloudIcon;
+  //     }
+  //   }
+  // }
+  // return { label, IconComp };
 }
 
 function WeatherInline({ stop }: { stop: ItineraryStop }) {
