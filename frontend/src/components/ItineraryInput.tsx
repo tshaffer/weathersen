@@ -34,7 +34,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { ForecastDayPart, Itinerary, ItineraryStop, WeatherCondition } from "../types";
+import { ForecastDayPart, Itinerary, ItineraryStop, WeatherCondition, WeatherConditionType } from "../types";
 import { fmtTempF } from "../utilities";
 
 // ---------------- Types ----------------
@@ -59,21 +59,40 @@ const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
 const toMph = (kph?: number) =>
   typeof kph === "number" ? Math.round(kph * 0.621371) : undefined;
 
+function valueFromKey(k: keyof typeof WeatherConditionType): WeatherConditionType {
+  return WeatherConditionType[k]; // → the prose string
+}
+
+const VALUE_TO_LABEL: Partial<Record<WeatherConditionType, string>> = {
+  [WeatherConditionType.PARTLY_CLOUDY]: "Partly Cloudy",
+  [WeatherConditionType.CLEAR]: "Sunny",
+  // …add others you care about
+};
+
 // Derive a condition label + icon from the forecast.
 // Prefers a phrase/summary if present; otherwise uses precip/cloud cover heuristics.
 function conditionFromForecast(stop: ItineraryStop): { label: string; IconComp: typeof WbSunnyIcon } {
-  
+
   console.log('conditionFromForecast stop:', stop);
 
   const daytimeForecast = stop.forecast?.daytimeForecast as ForecastDayPart | undefined;
   if (!daytimeForecast) return { label: "—", IconComp: WbSunnyIcon };
-  
+
   const weatherCondition: WeatherCondition | undefined = daytimeForecast?.weatherCondition;
   if (!weatherCondition) return { label: "—", IconComp: WbSunnyIcon };
 
   console.log(weatherCondition.type);
-  
-  return { label: weatherCondition.description.text || "—", IconComp: WbSunnyIcon };
+
+  // console.log('valueFromKey:', valueFromKey(weatherCondition.type as keyof typeof WeatherConditionType));
+
+  console.log('flibbet', WeatherConditionType[weatherCondition.type as unknown as keyof typeof WeatherConditionType]);
+  const wct = VALUE_TO_LABEL[weatherCondition.type];
+  console.log('wct:', wct);
+
+  type WeatherConditionKey = keyof typeof WeatherConditionType;
+  type WeatherConditionValue = (typeof WeatherConditionType)[WeatherConditionKey];
+
+  return { label: wct || "—", IconComp: WbSunnyIcon };
 
   // Prefer a phrase/summary if present
   // const phrase: string | undefined =
