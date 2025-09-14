@@ -20,10 +20,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import WbSunnyIcon from "@mui/icons-material/WbSunny";
-import CloudIcon from "@mui/icons-material/Cloud";
-import CloudQueueIcon from "@mui/icons-material/CloudQueue";
-import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
 import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
 import AirIcon from "@mui/icons-material/Air";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -34,8 +30,9 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { ForecastDayPart, Itinerary, ItineraryStop, WeatherCondition, WeatherConditionType } from "../types";
+import { Itinerary, ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
+import { WbSunny as SunnyIcon } from "@mui/icons-material";
 
 // ---------------- Types ----------------
 
@@ -43,6 +40,13 @@ export type ItineraryInputProps = {
   value: Itinerary;
   onChange: (next: Itinerary) => void;
   onClear?: () => void;
+};
+
+// Derive a condition label + icon from the forecast.
+type ConditionView = {
+  label: string;
+  iconUrl?: string;                 // from Google
+  FallbackIcon: typeof SunnyIcon;   // MUI fallback
 };
 
 // Utility to format ISO date (yyyy-mm-dd)
@@ -59,20 +63,20 @@ const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
 const toMph = (kph?: number) =>
   typeof kph === "number" ? Math.round(kph * 0.621371) : undefined;
 
-// Derive a condition label + icon from the forecast.
-// Prefers a phrase/summary if present; otherwise uses precip/cloud cover heuristics.
-function conditionFromForecast(stop: ItineraryStop): { label: string; IconComp: typeof WbSunnyIcon } {
+function conditionFromForecast(stop: ItineraryStop): ConditionView {
+
   console.log('conditionFromForecast stop:', stop);
 
-  const daytimeForecast = stop.forecast?.daytimeForecast as ForecastDayPart | undefined;
-  if (!daytimeForecast) return { label: "—", IconComp: WbSunnyIcon };
+  const wc: WeatherCondition | undefined = stop.forecast?.daytimeForecast?.weatherCondition;
+  const label =
+    wc?.description?.text || "—";
 
-  const weatherCondition: WeatherCondition | undefined = daytimeForecast?.weatherCondition;
-  if (!weatherCondition) return { label: "—", IconComp: WbSunnyIcon };
+  // Google returns a base URI; append .svg (add "_dark" if you want a dark theme variant)
+  const iconUrl = wc?.iconBaseUri ? `${wc.iconBaseUri}.svg` : undefined;
 
-  const wct = WeatherConditionType[weatherCondition.type as unknown as keyof typeof WeatherConditionType];
-  return { label: wct || "—", IconComp: WbSunnyIcon };
+  return { label, iconUrl, FallbackIcon: SunnyIcon };
 }
+
 
 function WeatherInline({ stop }: { stop: ItineraryStop }) {
   const d = stop.forecast?.daytimeForecast;
@@ -83,7 +87,7 @@ function WeatherInline({ stop }: { stop: ItineraryStop }) {
   const hi = fmtTempF(stop.forecast?.maxTemperature?.degrees); // High first
   const lo = fmtTempF(stop.forecast?.minTemperature?.degrees); // then Low
 
-  const { label, IconComp } = conditionFromForecast(stop);
+  const { label, iconUrl, FallbackIcon } = conditionFromForecast(stop);
 
   return (
     <Stack
@@ -101,7 +105,11 @@ function WeatherInline({ stop }: { stop: ItineraryStop }) {
 
       {/* Condition icon + text */}
       <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
-        <IconComp fontSize="small" />
+        {iconUrl ? (
+          <Box component="img" src={iconUrl} alt={label} sx={{ width: 20, height: 20, display: "block" }} />
+        ) : (
+          <FallbackIcon fontSize="small" />
+        )}
         <Typography variant="body2">{label}</Typography>
       </Stack>
 
