@@ -1,3 +1,4 @@
+// ItineraryInput.tsx
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -14,15 +15,17 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
-  Chip,
-  Collapse,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import WbSunnyIcon from "@mui/icons-material/WbSunny";
+import CloudIcon from "@mui/icons-material/Cloud";
+import CloudQueueIcon from "@mui/icons-material/CloudQueue";
+import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
+import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
+import AirIcon from "@mui/icons-material/Air";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -32,7 +35,6 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
 import { Itinerary, ItineraryStop } from "../types";
-import { fmtTempF } from "../utilities";
 
 // ---------------- Types ----------------
 
@@ -51,70 +53,83 @@ const newStop = (date: Dayjs): ItineraryStop => ({
   date: toISODate(date),
 });
 
-// Helpers for displaying forecast values
+// ---------- Display helpers (compact, single-line) ----------
 const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
+const toMph = (kph?: number) =>
+  typeof kph === "number" ? Math.round(kph * 0.621371) : undefined;
 
-// Compact forecast chip row + expand toggle
-function ForecastStrip({
-  stop,
-  open,
-  onToggle,
-}: {
-  stop: ItineraryStop;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  const precip = stop.forecast?.daytimeForecast?.precipitation?.probability;
-  const min = stop.forecast?.minTemperature?.degrees;
-  const max = stop.forecast?.maxTemperature?.degrees;
+// Derive a condition label + icon from the forecast.
+// Prefers a phrase/summary if present; otherwise uses precip/cloud cover heuristics.
+function conditionFromForecast(stop: ItineraryStop): { label: string; IconComp: typeof WbSunnyIcon } {
+  const d = stop.forecast?.daytimeForecast as any;
+  const phrase: string | undefined =
+    d?.condition?.phrase || d?.summary || d?.shortDescription;
+
+  const precip = d?.precipitation?.probability as number | undefined;
+  const cloud = d?.cloudCover as number | undefined;
+
+  let label = "—";
+  let IconComp = WbSunnyIcon;
+
+  if (phrase && typeof phrase === "string") {
+    label = phrase;
+    const p = phrase.toLowerCase();
+    if (p.includes("rain") || p.includes("shower") || p.includes("storm")) IconComp = ThunderstormIcon;
+    else if (p.includes("cloud")) IconComp = p.includes("partly") ? CloudQueueIcon : CloudIcon;
+    else if (p.includes("sun") || p.includes("clear")) IconComp = WbSunnyIcon;
+  } else {
+    if (typeof precip === "number" && precip >= 50) {
+      label = "Rain";
+      IconComp = ThunderstormIcon;
+    } else if (typeof cloud === "number") {
+      if (cloud <= 20) {
+        label = "Sunny";
+        IconComp = WbSunnyIcon;
+      } else if (cloud <= 60) {
+        label = "Partly Cloudy";
+        IconComp = CloudQueueIcon;
+      } else {
+        label = "Cloudy";
+        IconComp = CloudIcon;
+      }
+    }
+  }
+  return { label, IconComp };
+}
+
+function WeatherInline({ stop }: { stop: ItineraryStop }) {
+  const d = stop.forecast?.daytimeForecast;
+  const precip = d?.precipitation?.probability;
+  const windMph = toMph(d?.wind?.speed?.value);
+
+  const { label, IconComp } = conditionFromForecast(stop);
 
   return (
     <Stack
       direction="row"
       alignItems="center"
-      gap={1}
-      sx={{ flexWrap: "wrap", ml: { xs: 0, sm: 1 } }}
+      spacing={1.25}
+      sx={{ flexWrap: "nowrap", ml: 1, whiteSpace: "nowrap" }}
     >
-      <Typography variant="body2">Min {fmtTempF(min)}</Typography>
-      <Typography variant="body2">Max {fmtTempF(max)}</Typography>
-      <Typography variant="body2">Precip {fmtPct(precip)}</Typography>
-      {typeof precip === "number" && precip >= 40 && (
-        <Tooltip title="Higher chance of rain">
-          <Chip size="small" label="Rain" color="primary" variant="outlined" />
-        </Tooltip>
-      )}
-      <IconButton
-        size="small"
-        onClick={onToggle}
-        aria-label={open ? "Collapse details" : "Expand details"}
-      >
-        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-      </IconButton>
-    </Stack>
-  );
-}
+      {/* Condition icon + text */}
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
+        <IconComp fontSize="small" />
+        <Typography variant="body2">{label}</Typography>
+      </Stack>
 
-function ForecastDetails({ stop }: { stop: ItineraryStop }) {
-  const d = stop.forecast?.daytimeForecast;
-  const wind = d?.wind?.speed?.value;
-  const sunrise = stop.forecast?.sunEvents?.sunrise;
-  const sunset = stop.forecast?.sunEvents?.sunset;
+      {/* Precipitation */}
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <WaterDropOutlinedIcon fontSize="small" />
+        <Typography variant="body2">{fmtPct(precip)}</Typography>
+      </Stack>
 
-  return (
-    <Stack
-      direction={{ xs: "column", sm: "row" }}
-      spacing={1.5}
-      useFlexGap
-      flexWrap="wrap"
-      sx={{ px: 1, pb: 1 }}
-    >
-      <Typography variant="caption">UV: {d?.uvIndex ?? "—"}</Typography>
-      <Typography variant="caption">Clouds: {fmtPct(d?.cloudCover)}</Typography>
-      <Typography variant="caption">
-        Wind: {typeof wind === "number" ? `${wind} kph` : "—"}
-      </Typography>
-      <Typography variant="caption">Sunrise: {sunrise ?? "—"}</Typography>
-      <Typography variant="caption">Sunset: {sunset ?? "—"}</Typography>
+      {/* Wind (mph) */}
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <AirIcon fontSize="small" />
+        <Typography variant="body2">
+          {typeof windMph === "number" ? `${windMph} mph` : "—"}
+        </Typography>
+      </Stack>
     </Stack>
   );
 }
@@ -133,17 +148,7 @@ export default function ItineraryInput({
   onClear,
 }: ItineraryInputProps) {
   const dispatch = useDispatch<AppDispatch>();
-
   const [showClearDialog, setShowClearDialog] = useState(false);
-
-  // simple expand/collapse state per row
-  const [openRows, setOpenRows] = useState<boolean[]>([]);
-  const toggleRow = (i: number) =>
-    setOpenRows((prev) => {
-      const next = [...prev];
-      next[i] = !next[i];
-      return next;
-    });
 
   const itinerary = value;
   const setItinerary = onChange;
@@ -166,9 +171,6 @@ export default function ItineraryInput({
   };
 
   const updateStopDate = (idx: number, date: string) => {
-    console.log('updateStopDate called');
-    console.log('value:', value);
-    console.log(idx, date);
     const patch = { date };
     if (value[idx].locationCoordinates) {
       dispatch(fetchForecast({ location: value[idx].locationCoordinates, date, index: idx }));
@@ -193,8 +195,7 @@ export default function ItineraryInput({
 
   const handleClear = () => {
     setShowClearDialog(false);
-    onClear?.(); // Redux will reset to initialState with placeHolderStop
-    setOpenRows([]); // only local UI reset
+    onClear?.(); // Redux resets to placeholder stop
   };
 
   return (
@@ -238,9 +239,10 @@ export default function ItineraryInput({
                           sx={{ p: 1 }}
                         >
                           <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            alignItems={{ sm: "center" }}
+                            direction="row"            // single-line layout
+                            alignItems="center"
                             gap={1}
+                            sx={{ flexWrap: "nowrap" }} // prevent wrapping
                           >
                             <Box
                               {...drag.dragHandleProps}
@@ -264,16 +266,12 @@ export default function ItineraryInput({
                             <DatePicker
                               label="Date"
                               value={stop.date ? dayjs(stop.date) : null}
-                              onChange={(d) => updateStopDate(idx, toISODate(d) )}
+                              onChange={(d) => updateStopDate(idx, toISODate(d))}
                               slotProps={{ textField: { sx: { minWidth: 180 } } }}
                             />
 
-                            {/* Inline compact forecast strip + expand/collapse */}
-                            <ForecastStrip
-                              stop={stop}
-                              open={!!openRows[idx]}
-                              onToggle={() => toggleRow(idx)}
-                            />
+                            {/* Weather.com-style inline strip */}
+                            <WeatherInline stop={stop} />
 
                             <Tooltip title="Remove stop">
                               <IconButton color="error" onClick={() => deleteStop(idx)}>
@@ -281,11 +279,6 @@ export default function ItineraryInput({
                               </IconButton>
                             </Tooltip>
                           </Stack>
-
-                          {/* Collapsible details under the row */}
-                          <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
-                            <ForecastDetails stop={stop} />
-                          </Collapse>
                         </Box>
                       )}
                     </Draggable>
@@ -296,7 +289,7 @@ export default function ItineraryInput({
             </Droppable>
           </DragDropContext>
 
-          {/* Helper: Derived JSON preview for integration/testing */}
+          {/* Dev helper JSON */}
           <Box mt={3}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Current Itinerary (JSON)
