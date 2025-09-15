@@ -30,10 +30,11 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { GooglePlace, Itinerary, ItineraryStop, WeatherCondition } from "../types";
+import { Location, Itinerary, ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
 import { WbSunny as SunnyIcon } from "@mui/icons-material";
 import React from "react";
+import { PickerValue } from "@mui/x-date-pickers/internals";
 
 // ---------------- Types ----------------
 
@@ -154,12 +155,12 @@ export default function ItineraryInput({
   const setItinerary = onChange;
 
   const handleChangeGooglePlace = async (
-    googlePlace: GooglePlace,
+    googlePlace: Location,
     date: string,
     index: number
   ) => {
     dispatch(fetchForecast({ location: googlePlace.geometry.location, date, index }));
-    updateStop(index, { glocation: googlePlace });  
+    updateStop(index, { location: googlePlace });
     setPlaceName(googlePlace.name!);
   };
 
@@ -173,8 +174,8 @@ export default function ItineraryInput({
 
   const updateStopDate = (idx: number, date: string) => {
     const patch = { date };
-    if (value[idx].glocation) {
-      dispatch(fetchForecast({ location: value[idx].glocation.geometry.location, date, index: idx }));
+    if (value[idx].location) {
+      dispatch(fetchForecast({ location: value[idx].location.geometry.location, date, index: idx }));
     }
     updateStop(idx, patch);
   };
@@ -259,14 +260,16 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               placeName={placeName}
                               onSetPlaceName={(name: string) => setPlaceName(name)}
-                              onSetGoogleLocation={(googlePlace: GooglePlace) => handleChangeGooglePlace(googlePlace, stop.date, idx)}
+                              onSetGoogleLocation={(googlePlace: Location) => handleChangeGooglePlace(googlePlace, stop.date, idx)}
                             />
 
                             <DatePicker
                               label="Date"
                               value={stop.date ? dayjs(stop.date) : null}
-                              onChange={(d) => updateStopDate(idx, toISODate(d))}
+                              onChange={(d: PickerValue) => updateStopDate(idx, toISODate(d))}
                               slotProps={{ textField: { sx: { minWidth: 180 } } }}
+                              minDate={dayjs()}              // today
+                              maxDate={dayjs().add(9, "day")} // 9 days from today
                             />
 
                             {/* Weather.com-style inline strip */}

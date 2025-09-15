@@ -3,7 +3,7 @@ export interface GoogleGeometry {
   viewport: google.maps.LatLngBoundsLiteral;
 }
 
-export interface GooglePlace {
+export interface Location {
   googlePlaceId: string;
   geometry: GoogleGeometry;
   name: string;
