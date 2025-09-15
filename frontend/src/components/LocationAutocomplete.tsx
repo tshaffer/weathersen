@@ -43,7 +43,6 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props: Locati
     if (place?.geometry?.location) {
       const googlePlace: Location = pickGooglePlaceProperties(place);
       onSetGoogleLocation(googlePlace!);
-      onSetPlaceName(googlePlace!.name!);
     } else {
       console.error('No place found in handleMapLocationChanged');
     }

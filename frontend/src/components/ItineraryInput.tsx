@@ -20,8 +20,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
-import AirIcon from "@mui/icons-material/Air";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { Dayjs } from "dayjs";
@@ -29,11 +27,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { Location, Itinerary, ItineraryStop, WeatherCondition } from "../types";
-import { fmtTempF } from "../utilities";
-import { WbSunny as SunnyIcon } from "@mui/icons-material";
+import { Location, Itinerary, ItineraryStop } from "../types";
 import React from "react";
 import { StopDateField } from "./StopDateField";
+import Forecast from "./Forecast";
 
 // ---------------- Types ----------------
 
@@ -43,13 +40,6 @@ export type ItineraryInputProps = {
   onClear?: () => void;
 };
 
-// Derive a condition label + icon from the forecast.
-type ConditionView = {
-  label: string;
-  iconUrl?: string;                 // from Google
-  FallbackIcon: typeof SunnyIcon;   // MUI fallback
-};
-
 // Utility to format ISO date (yyyy-mm-dd)
 const toISODate = (d: Dayjs | null): string => (d ? d.format("YYYY-MM-DD") : "");
 
@@ -57,78 +47,6 @@ const newStop = (date: Dayjs): ItineraryStop => ({
   id: crypto.randomUUID(),
   date: toISODate(date),
 });
-
-// ---------- Display helpers (compact, single-line) ----------
-const fmtPct = (n?: number) => (typeof n === "number" ? `${n}%` : "—");
-const toMph = (kph?: number) =>
-  typeof kph === "number" ? Math.round(kph * 0.621371) : undefined;
-
-function conditionFromForecast(stop: ItineraryStop): ConditionView {
-
-  // console.log('conditionFromForecast stop:', stop);
-
-  const wc: WeatherCondition | undefined = stop.forecast?.daytimeForecast?.weatherCondition;
-  const label =
-    wc?.description?.text || "—";
-
-  // Google returns a base URI; append .svg (add "_dark" if you want a dark theme variant)
-  const iconUrl = wc?.iconBaseUri ? `${wc.iconBaseUri}.svg` : undefined;
-
-  return { label, iconUrl, FallbackIcon: SunnyIcon };
-}
-
-
-function WeatherInline({ stop }: { stop: ItineraryStop }) {
-  const d = stop.forecast?.daytimeForecast;
-  const precip = d?.precipitation?.probability;
-  const windMph = toMph(d?.wind?.speed?.value);
-
-  // Hi/Lo (display F, source values assumed °C)
-  const hi = fmtTempF(stop.forecast?.maxTemperature?.degrees); // High first
-  const lo = fmtTempF(stop.forecast?.minTemperature?.degrees); // then Low
-
-  const { label, iconUrl, FallbackIcon } = conditionFromForecast(stop);
-
-  return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1.25}
-      sx={{ flexWrap: "nowrap", ml: 1, whiteSpace: "nowrap" }}
-    >
-      {/* Hi/Lo */}
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 72 }}>
-        <Typography variant="body2" fontWeight={700}>
-          {hi}/{lo}
-        </Typography>
-      </Stack>
-
-      {/* Condition icon + text */}
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
-        {iconUrl ? (
-          <Box component="img" src={iconUrl} alt={label} sx={{ width: 20, height: 20, display: "block" }} />
-        ) : (
-          <FallbackIcon fontSize="small" />
-        )}
-        <Typography variant="body2">{label}</Typography>
-      </Stack>
-
-      {/* Precipitation */}
-      <Stack direction="row" alignItems="center" spacing={0.5}>
-        <WaterDropOutlinedIcon fontSize="small" />
-        <Typography variant="body2">{fmtPct(precip)}</Typography>
-      </Stack>
-
-      {/* Wind (mph) */}
-      <Stack direction="row" alignItems="center" spacing={0.5}>
-        <AirIcon fontSize="small" />
-        <Typography variant="body2">
-          {typeof windMph === "number" ? `${windMph} mph` : "—"}
-        </Typography>
-      </Stack>
-    </Stack>
-  );
-}
 
 function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
   const result = Array.from(list);
@@ -146,8 +64,6 @@ export default function ItineraryInput({
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const [placeName, setPlaceName] = React.useState('');
-
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   const itinerary = value;
@@ -159,8 +75,7 @@ export default function ItineraryInput({
     index: number
   ) => {
     dispatch(fetchForecast({ location: googlePlace.geometry.location, date, index }));
-    updateStop(index, { location: googlePlace });
-    setPlaceName(googlePlace.name!);
+    updateStop(index, { placeName: googlePlace.name, location: googlePlace });
   };
 
   const addStop = () => {
@@ -169,6 +84,11 @@ export default function ItineraryInput({
       : dayjs();
     const nextDate = base.add(1, "day");
     setItinerary([...itinerary, newStop(nextDate)]);
+  };
+
+  const updatePlaceName = (idx: number, placeName: string) => {
+    const patch = { placeName };
+    updateStop(idx, patch);
   };
 
   const updateStopDate = (idx: number, date: string) => {
@@ -257,8 +177,8 @@ export default function ItineraryInput({
                             </Typography>
 
                             <LocationAutocomplete
-                              placeName={placeName}
-                              onSetPlaceName={(name: string) => setPlaceName(name)}
+                              placeName={stop.placeName || ''}
+                              onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
                               onSetGoogleLocation={(googlePlace: Location) => handleChangeGooglePlace(googlePlace, stop.date, idx)}
                             />
 
@@ -271,7 +191,7 @@ export default function ItineraryInput({
                             </StopDateField>
 
                             {/* Weather.com-style inline strip */}
-                            <WeatherInline stop={stop} />
+                            <Forecast stop={stop} />
 
                             <Tooltip title="Remove stop">
                               <IconButton color="error" onClick={() => deleteStop(idx)}>
