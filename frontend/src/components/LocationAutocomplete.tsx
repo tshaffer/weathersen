@@ -2,33 +2,48 @@
 import { Box } from '@mui/material';
 import { Autocomplete } from '@react-google-maps/api';
 import { useRef } from 'react';
+import { GooglePlace } from '../types';
 
 interface LocationAutocompleteProps {
-  value: string;                                   // NEW
-  onChangeText: (text: string) => void;            // NEW
-  onSetMapLocation: (loc: google.maps.LatLngLiteral) => void;
+  placeName: string;
+  onSetPlaceName: (placeName: string) => void;
+  onSetGoogleLocation: (googleLocation: GooglePlace) => void;
 }
 
-const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
-  value,
-  onChangeText,
-  onSetMapLocation,
-}) => {
-  const mapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props: LocationAutocompleteProps) => {
 
-  const handleMapLocationChanged = () => {
-    if (!mapAutocompleteRef.current) return;
-    const place: google.maps.places.PlaceResult = mapAutocompleteRef.current.getPlace();
+  const { placeName: googleLocation, onSetPlaceName, onSetGoogleLocation } = props;
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlace {
+    console.log('pickGooglePlaceProperties', googlePlaceResult);
+
+    const googlePlace: GooglePlace = {
+      googlePlaceId: googlePlaceResult.place_id!,
+      name: googlePlaceResult.name!,
+      geometry: {
+        location: {
+          lat: googlePlaceResult.geometry!.location!.lat(),
+          lng: googlePlaceResult.geometry!.location!.lng()
+        },
+        viewport: {
+          east: googlePlaceResult.geometry!.viewport!.getNorthEast().lng(),
+          north: googlePlaceResult.geometry!.viewport!.getNorthEast().lat(),
+          south: googlePlaceResult.geometry!.viewport!.getSouthWest().lat(),
+          west: googlePlaceResult.geometry!.viewport!.getSouthWest().lng(),
+        },
+      },
+    };
+    return googlePlace;
+  }
+
+  const handlePlaceChanged = () => {
+    if (!autocompleteRef.current) return;
+    const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
     if (place?.geometry?.location) {
-      const locationCoordinates: google.maps.LatLngLiteral = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-      };
-      // Use the formatted address (or fallback to description) as the text value
-      const text = place.formatted_address ?? place.name ?? '';
-      onChangeText(text);                 // keep itinerary text in sync
-      onSetMapLocation(locationCoordinates);   // let caller store lat/lng if desired
+      const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+      onSetGoogleLocation(googlePlace!);
+      onSetPlaceName(googlePlace!.name!);
     } else {
       console.error('No place found in handleMapLocationChanged');
     }
@@ -37,15 +52,14 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   return (
     <Box sx={{ flex: 1, minWidth: 0 }}>
       <Autocomplete
-        onLoad={(autocomplete) => (mapAutocompleteRef.current = autocomplete)}
-        onPlaceChanged={handleMapLocationChanged}
+        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+        onPlaceChanged={handlePlaceChanged}
       >
         <input
-          ref={inputRef}
           type="text"
           placeholder="Enter a location"
-          value={value}                                     // controlled
-          onChange={(e) => onChangeText(e.target.value)}    // controlled
+          value={googleLocation}                                     // controlled
+          onChange={(e) => onSetPlaceName(e.target.value)}    // controlled
           style={{
             width: '100%',
             padding: '10px',

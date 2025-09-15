@@ -30,9 +30,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { Itinerary, ItineraryStop, WeatherCondition } from "../types";
+import { GooglePlace, Itinerary, ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
 import { WbSunny as SunnyIcon } from "@mui/icons-material";
+import React from "react";
 
 // ---------------- Types ----------------
 
@@ -54,7 +55,6 @@ const toISODate = (d: Dayjs | null): string => (d ? d.format("YYYY-MM-DD") : "")
 
 const newStop = (date: Dayjs): ItineraryStop => ({
   id: crypto.randomUUID(),
-  location: "",
   date: toISODate(date),
 });
 
@@ -143,19 +143,24 @@ export default function ItineraryInput({
   onChange,
   onClear,
 }: ItineraryInputProps) {
+
   const dispatch = useDispatch<AppDispatch>();
+
+  const [placeName, setPlaceName] = React.useState('');
+
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   const itinerary = value;
   const setItinerary = onChange;
 
-  const handleSetMapLocation = async (
-    locationCoordinates: google.maps.LatLngLiteral,
+  const handleChangeGooglePlace = async (
+    googlePlace: GooglePlace,
     date: string,
     index: number
-  ): Promise<void> => {
-    dispatch(fetchForecast({ location: locationCoordinates, date, index }));
-    updateStop(index, { locationCoordinates });
+  ) => {
+    dispatch(fetchForecast({ location: googlePlace.geometry.location, date, index }));
+    updateStop(index, { glocation: googlePlace });  
+    setPlaceName(googlePlace.name!);
   };
 
   const addStop = () => {
@@ -168,8 +173,8 @@ export default function ItineraryInput({
 
   const updateStopDate = (idx: number, date: string) => {
     const patch = { date };
-    if (value[idx].locationCoordinates) {
-      dispatch(fetchForecast({ location: value[idx].locationCoordinates, date, index: idx }));
+    if (value[idx].glocation) {
+      dispatch(fetchForecast({ location: value[idx].glocation.geometry.location, date, index: idx }));
     }
     updateStop(idx, patch);
   };
@@ -252,11 +257,9 @@ export default function ItineraryInput({
                             </Typography>
 
                             <LocationAutocomplete
-                              value={stop.location}
-                              onChangeText={(text) => updateStop(idx, { location: text })}
-                              onSetMapLocation={(locationCoordinates: google.maps.LatLngLiteral) =>
-                                handleSetMapLocation(locationCoordinates, stop.date, idx)
-                              }
+                              placeName={placeName}
+                              onSetPlaceName={(name: string) => setPlaceName(name)}
+                              onSetGoogleLocation={(googlePlace: GooglePlace) => handleChangeGooglePlace(googlePlace, stop.date, idx)}
                             />
 
                             <DatePicker

@@ -16,7 +16,7 @@ export const fetchForecast = createAsyncThunk(
 const placeholderStop: ItineraryStop = {
   id: crypto.randomUUID(),
   date: new Date().toISOString().slice(0, 10),
-  location: '',
+  // location: '',
 };
 
 const initialState: ItineraryState = {

@@ -1,3 +1,14 @@
+export interface GoogleGeometry {
+  location: google.maps.LatLngLiteral;
+  viewport: google.maps.LatLngBoundsLiteral;
+}
+
+export interface GooglePlace {
+  googlePlaceId: string;
+  geometry: GoogleGeometry;
+  name: string;
+}
+
 export interface ForecastDayPart {
   interval?: { startTime: string; endTime: string }; // *
   weatherCondition?: WeatherCondition; // *
