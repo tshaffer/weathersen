@@ -24,7 +24,6 @@ import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
 import AirIcon from "@mui/icons-material/Air";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
@@ -34,7 +33,6 @@ import { Location, Itinerary, ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
 import { WbSunny as SunnyIcon } from "@mui/icons-material";
 import React from "react";
-import { PickerValue } from "@mui/x-date-pickers/internals";
 import { StopDateField } from "./StopDateField";
 
 // ---------------- Types ----------------
@@ -265,20 +263,12 @@ export default function ItineraryInput({
                             />
 
                             <StopDateField
-                              idx={0}
+                              idx={idx}
                               stop={{date: stop.date}}
                               updateStopDate={(idx: number, iso: string | null) => updateStopDate(idx, iso!)}
                               toISODate={toISODate}>
 
                             </StopDateField>
-                            {/* <DatePicker
-                              label="Date"
-                              value={stop.date ? dayjs(stop.date) : null}
-                              onChange={(d: PickerValue) => updateStopDate(idx, toISODate(d))}
-                              slotProps={{ textField: { sx: { minWidth: 180 } } }}
-                              minDate={dayjs()}              // today
-                              maxDate={dayjs().add(9, "day")} // 9 days from today
-                            /> */}
 
                             {/* Weather.com-style inline strip */}
                             <WeatherInline stop={stop} />
