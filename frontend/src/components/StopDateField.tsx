@@ -26,6 +26,7 @@ export const StopDateField: React.FC<{
   );
 
   const handleError = (reason: DateValidationError, _value: PickerValue) => {
+    console.log('DatePicker error:', reason, _value);
     // Map MUI reasons to friendly messages
     const msg =
       reason === "invalidDate"
@@ -68,7 +69,6 @@ export const StopDateField: React.FC<{
       onChange={handleChange}
       onAccept={commit}
       onError={handleError}
-      // If users type and tab away:
       slotProps={{
         textField: {
           onBlur: (e: any) => {
@@ -81,15 +81,11 @@ export const StopDateField: React.FC<{
           helperText: error ?? " ",
         },
       }}
-      // Hard constraints for picker UI & parsing checks
       disablePast
       minDate={minDate}
       maxDate={maxDate}
-      // Optional: standardize input format to reduce user typos
       format="YYYY-MM-DD"
-      // Extra belt: redundant with min/max but keeps year/month views tight
       shouldDisableDate={(d) => d.isBefore(minDate, "day") || d.isAfter(maxDate, "day")}
-      // Nice UX: close when a date is picked
       closeOnSelect
     />
   );

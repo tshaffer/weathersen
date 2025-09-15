@@ -67,7 +67,7 @@ const toMph = (kph?: number) =>
 
 function conditionFromForecast(stop: ItineraryStop): ConditionView {
 
-  console.log('conditionFromForecast stop:', stop);
+  // console.log('conditionFromForecast stop:', stop);
 
   const wc: WeatherCondition | undefined = stop.forecast?.daytimeForecast?.weatherCondition;
   const label =
