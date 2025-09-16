@@ -45,8 +45,9 @@ export default function Forecast({
     open: boolean,
     onToggle: () => void
    }) {
+    
   const d = stop.forecast?.daytimeForecast;
-  const precip = d?.precipitation?.probability;
+  const precip = d?.precipitation?.probability?.percent;
   const windMph = toMph(d?.wind?.speed?.value);
 
   // Hi/Lo (display F, source values assumed °C)

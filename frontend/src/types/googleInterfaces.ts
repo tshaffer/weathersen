@@ -13,7 +13,10 @@ export interface ForecastDayPart {
   interval?: { startTime: string; endTime: string }; // *
   weatherCondition?: WeatherCondition; // *
   precipitation?: {
-    probability?: number;
+    probability?: { 
+      percent: number, 
+      type: string
+    };
     qpf?: any;
     snowQpf?: any;
   };  // *

@@ -32,6 +32,7 @@ import { Location, Itinerary, ItineraryStop } from "../types";
 import React from "react";
 import { StopDateField } from "./StopDateField";
 import Forecast from "./Forecast";
+import ForecastDetails from "./ForecastDetails";
 
 // ---------------- Types ----------------
 
@@ -127,6 +128,7 @@ export default function ItineraryInput({
   const handleClear = () => {
     setShowClearDialog(false);
     onClear?.(); // Redux resets to placeholder stop
+    setOpenRows([]); // reset expanded rows
   };
 
   return (
@@ -213,12 +215,12 @@ export default function ItineraryInput({
                               </IconButton>
                             </Tooltip>
 
-                            {/* Collapsible details under the row */}
-                            <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
-                              Herro
-                            </Collapse>
-
                           </Stack>
+                          
+                          {/* Collapsible details under the row */}
+                          <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
+                            <ForecastDetails stop={stop} />
+                          </Collapse>
                         </Box>
                       )}
                     </Draggable>
