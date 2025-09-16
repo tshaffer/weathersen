@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
+  Collapse,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
@@ -65,6 +66,15 @@ export default function ItineraryInput({
   const dispatch = useDispatch<AppDispatch>();
 
   const [showClearDialog, setShowClearDialog] = useState(false);
+
+  // simple expand/collapse state per row
+  const [openRows, setOpenRows] = useState<boolean[]>([]);
+  const toggleRow = (i: number) =>
+    setOpenRows((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
 
   const itinerary = value;
   const setItinerary = onChange;
@@ -184,20 +194,30 @@ export default function ItineraryInput({
 
                             <StopDateField
                               idx={idx}
-                              stop={{date: stop.date}}
+                              stop={{ date: stop.date }}
                               updateStopDate={(idx: number, iso: string | null) => updateStopDate(idx, iso!)}
                               toISODate={toISODate}>
 
                             </StopDateField>
 
                             {/* Weather.com-style inline strip */}
-                            <Forecast stop={stop} />
+                            <Forecast
+                              stop={stop}
+                              open={!!openRows[idx]}
+                              onToggle={() => toggleRow(idx)}
+                            />
 
                             <Tooltip title="Remove stop">
                               <IconButton color="error" onClick={() => deleteStop(idx)}>
                                 <DeleteOutlineIcon />
                               </IconButton>
                             </Tooltip>
+
+                            {/* Collapsible details under the row */}
+                            <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
+                              Herro
+                            </Collapse>
+
                           </Stack>
                         </Box>
                       )}

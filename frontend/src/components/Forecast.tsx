@@ -1,5 +1,6 @@
 import {
   Box,
+  IconButton,
   Stack,
   Typography,
 } from "@mui/material";
@@ -8,6 +9,8 @@ import AirIcon from "@mui/icons-material/Air";
 import { ItineraryStop, WeatherCondition } from "../types";
 import { fmtTempF } from "../utilities";
 import { WbSunny as SunnyIcon } from "@mui/icons-material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 // Derive a condition label + icon from the forecast.
 type ConditionView = {
@@ -35,7 +38,13 @@ function conditionFromForecast(stop: ItineraryStop): ConditionView {
   return { label, iconUrl, FallbackIcon: SunnyIcon };
 }
 
-export default function Forecast({ stop }: { stop: ItineraryStop }) {
+export default function Forecast({
+   stop, open, onToggle
+   }: { 
+    stop: ItineraryStop,
+    open: boolean,
+    onToggle: () => void
+   }) {
   const d = stop.forecast?.daytimeForecast;
   const precip = d?.precipitation?.probability;
   const windMph = toMph(d?.wind?.speed?.value);
@@ -83,6 +92,15 @@ export default function Forecast({ stop }: { stop: ItineraryStop }) {
           {typeof windMph === "number" ? `${windMph} mph` : "—"}
         </Typography>
       </Stack>
+
+      <IconButton
+        size="small"
+        onClick={onToggle}
+        aria-label={open ? "Collapse details" : "Expand details"}
+      >
+        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+      </IconButton>
+
     </Stack>
   );
 }
