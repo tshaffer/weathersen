@@ -65,13 +65,6 @@ const AppShell: React.FC = () => {
 
       </Container>
 
-      <Box component="footer" sx={{ py: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Container maxWidth="lg">
-          <Typography variant="caption" color="text.secondary">
-            Demo UI • Replace sample data with real forecast data sources later.
-          </Typography>
-        </Container>
-      </Box>
     </Box>
   );
 };
