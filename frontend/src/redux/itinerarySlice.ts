@@ -49,16 +49,13 @@ const itinerarySlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchForecast.fulfilled, (state, action: PayloadAction<any>) => {
 
-      console.log('Forecast fetched:', action.payload);
 
       const fetchForecastResponse: FetchForecastResponse = action.payload;
       const { days: forecast, date, index } = fetchForecastResponse;
 
       for (const dailyForecast of forecast) {
         if (matchesDisplayDate(action.payload.date, dailyForecast.displayDate)) {
-          console.log('Plain object before:', current(state.itineraryStops[index]));
           state.itineraryStops![action.payload.index].forecast = dailyForecast;
-          console.log('Plain object after:', current(state.itineraryStops[index]));
           break;
         }
       }

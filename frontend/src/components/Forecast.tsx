@@ -26,14 +26,11 @@ const toMph = (kph?: number) =>
 
 function conditionFromForecast(stop: ItineraryStop): ConditionView {
 
-  // console.log('conditionFromForecast stop:', stop);
-
-  const wc: WeatherCondition | undefined = stop.forecast?.daytimeForecast?.weatherCondition;
-  const label =
-    wc?.description?.text || "—";
+  const weatherCondition: WeatherCondition | undefined = stop.forecast?.daytimeForecast?.weatherCondition;
+  const label = weatherCondition?.description?.text || "—";
 
   // Google returns a base URI; append .svg (add "_dark" if you want a dark theme variant)
-  const iconUrl = wc?.iconBaseUri ? `${wc.iconBaseUri}.svg` : undefined;
+  const iconUrl = weatherCondition?.iconBaseUri ? `${weatherCondition.iconBaseUri}.svg` : undefined;
 
   return { label, iconUrl, FallbackIcon: SunnyIcon };
 }
@@ -45,10 +42,10 @@ export default function Forecast({
     open: boolean,
     onToggle: () => void
    }) {
-    
-  const d = stop.forecast?.daytimeForecast;
-  const precip = d?.precipitation?.probability?.percent;
-  const windMph = toMph(d?.wind?.speed?.value);
+
+  const daytimeForecast = stop.forecast?.daytimeForecast;
+  const precip = daytimeForecast?.precipitation?.probability?.percent;
+  const windMph = toMph(daytimeForecast?.wind?.speed?.value);
 
   // Hi/Lo (display F, source values assumed °C)
   const hi = fmtTempF(stop.forecast?.maxTemperature?.degrees); // High first

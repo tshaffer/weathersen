@@ -30,7 +30,6 @@ const AppShell: React.FC = () => {
   const itinerary: ItineraryState = useSelector((state: RootState) => state.itinerary);
 
   const handleUpdateItinerary = (newItinerary: Itinerary) => {
-    // console.log("handleUpdateItinerary:", newItinerary);
     dispatch(setItinerary(newItinerary));
   };
 

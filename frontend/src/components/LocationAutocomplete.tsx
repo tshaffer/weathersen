@@ -16,7 +16,6 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props: Locati
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): Location {
-    console.log('pickGooglePlaceProperties', googlePlaceResult);
 
     const googlePlace: Location = {
       googlePlaceId: googlePlaceResult.place_id!,
