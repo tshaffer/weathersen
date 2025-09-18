@@ -29,12 +29,11 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
 import { Location, ItineraryStop } from "../types";
-import React from "react";
-import { StopDateField } from "./StopDateField";
 import Forecast from "./Forecast";
 import ForecastDetails from "./ForecastDetails";
 import { DatePicker } from "@mui/x-date-pickers";
 import { PickerValue } from "@mui/x-date-pickers/internals";
+import { StopDateField } from "./StopDateField";
 
 // ---------------- Types ----------------
 
@@ -44,12 +43,10 @@ export type ItineraryInputProps = {
   onClear?: () => void;
 };
 
-// Utility to format ISO date (yyyy-mm-dd)
 const toISODate = (d: Dayjs | null): string => (d ? d.format("YYYY-MM-DD") : "");
 
 const newStop = (): ItineraryStop => ({
   id: crypto.randomUUID(),
-  // date: toISODate(date),
 });
 
 function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
@@ -103,14 +100,6 @@ export default function ItineraryInput({
     updateStop(idx, patch);
   };
 
-  // const updateStopDate = (idx: number, date: string) => {
-  //   const patch = { date };
-  //   if (value[idx].location) {
-  //     dispatch(fetchForecast({ location: value[idx].location.geometry.location, date, index: idx }));
-  //   }
-  //   updateStop(idx, patch);
-  // };
-
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
     setItinerary(itinerary.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
@@ -141,12 +130,18 @@ export default function ItineraryInput({
               Itinerary
             </Typography>
             <Stack direction="row" gap={1}>
-              <DatePicker
+              {/* <DatePicker
                 label="Date"
                 value={itineraryStartDate ? dayjs(itineraryStartDate) : null}
                 onChange={(d: PickerValue) => setItineraryStartDate(d as Dayjs)}
                 slotProps={{ textField: { sx: { minWidth: 180 } } }}
-              />
+              /> */}
+              <StopDateField
+                idx={0}
+                stop={{ date: toISODate(itineraryStartDate) }}
+                updateStopDate={(idx: number, iso: string | null) => setItineraryStartDate(iso ? dayjs(iso) : dayjs())}
+                toISODate={itineraryStartDate ? (d: PickerValue) => toISODate(d as Dayjs) : () => null}>
+              </StopDateField>
 
               <Tooltip title="Clear trip and start new">
                 <Button
@@ -208,70 +203,70 @@ export default function ItineraryInput({
                               slotProps={{ textField: { sx: { minWidth: 180 } } }}
                               readOnly
                             />
-                          {/* Weather.com-style inline strip */}
-                          <Forecast
-                            stop={stop}
-                            open={!!openRows[idx]}
-                            onToggle={() => toggleRow(idx)}
-                          />
+                            {/* Weather.com-style inline strip */}
+                            <Forecast
+                              stop={stop}
+                              open={!!openRows[idx]}
+                              onToggle={() => toggleRow(idx)}
+                            />
 
-                          <Tooltip title="Remove stop">
-                            <IconButton color="error" onClick={() => deleteStop(idx)}>
-                              <DeleteOutlineIcon />
-                            </IconButton>
-                          </Tooltip>
+                            <Tooltip title="Remove stop">
+                              <IconButton color="error" onClick={() => deleteStop(idx)}>
+                                <DeleteOutlineIcon />
+                              </IconButton>
+                            </Tooltip>
 
-                        </Stack>
+                          </Stack>
 
                           {/* Collapsible details under the row */}
-                      <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
-                        <ForecastDetails stop={stop} />
-                      </Collapse>
-                    </Box>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </Stack>
+                          <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
+                            <ForecastDetails stop={stop} />
+                          </Collapse>
+                        </Box>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Stack>
               )}
-          </Droppable>
-        </DragDropContext>
+            </Droppable>
+          </DragDropContext>
 
-        {/* Dev helper JSON */}
-        <Box mt={3}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Current Itinerary (JSON)
+          {/* Dev helper JSON */}
+          <Box mt={3}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Current Itinerary (JSON)
+            </Typography>
+            <pre
+              style={{
+                background: "#f7f7f7",
+                padding: 12,
+                borderRadius: 12,
+                overflow: "auto",
+              }}
+            >
+              {JSON.stringify(itinerary, null, 2)}
+            </pre>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Clear Trip dialog */}
+      <Dialog open={showClearDialog} onClose={() => setShowClearDialog(false)}>
+        <DialogTitle>Clear current trip?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            This will remove all current stops and start a new, empty itinerary (we’ll leave one blank stop to get you
+            going).
           </Typography>
-          <pre
-            style={{
-              background: "#f7f7f7",
-              padding: 12,
-              borderRadius: 12,
-              overflow: "auto",
-            }}
-          >
-            {JSON.stringify(itinerary, null, 2)}
-          </pre>
-        </Box>
-      </CardContent>
-    </Card>
-
-      {/* Clear Trip dialog */ }
-  <Dialog open={showClearDialog} onClose={() => setShowClearDialog(false)}>
-    <DialogTitle>Clear current trip?</DialogTitle>
-    <DialogContent>
-      <Typography>
-        This will remove all current stops and start a new, empty itinerary (we’ll leave one blank stop to get you
-        going).
-      </Typography>
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={() => setShowClearDialog(false)}>Cancel</Button>
-      <Button color="error" variant="contained" onClick={handleClear}>
-        Clear Trip
-      </Button>
-    </DialogActions>
-  </Dialog>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowClearDialog(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleClear}>
+            Clear Trip
+          </Button>
+        </DialogActions>
+      </Dialog>
     </LocalizationProvider >
   );
 }
