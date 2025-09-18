@@ -4,11 +4,9 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { DateValidationError } from '@mui/x-date-pickers/models';
 
 const minDate = dayjs().startOf("day");
-const maxDate = minDate.add(9, "day").endOf("day");
 
-function clampDate(v: Dayjs, min: Dayjs, max: Dayjs) {
+function clampDate(v: Dayjs, min: Dayjs) {
   if (v.isBefore(min, "day")) return min;
-  if (v.isAfter(max, "day")) return max;
   return v;
 }
 
@@ -33,16 +31,14 @@ export const StopDateField: React.FC<{
         ? "Enter a valid date."
         : reason === "minDate" || reason === "disablePast"
           ? `Date must be on/after ${minDate.format("MMM D, YYYY")}.`
-          : reason === "maxDate" || reason === "disableFuture"
-            ? `Date must be on/before ${maxDate.format("MMM D, YYYY")}.`
-            : null;
+          : null;
     setError(msg);
   };
 
   const handleChange = (d: PickerValue) => {
     // Let the picker update; we only persist if valid
     if (d && d.isValid()) {
-      const clamped = clampDate(d, minDate, maxDate);
+      const clamped = clampDate(d, minDate);
       if (clamped.isSame(d, "day")) {
         setLastValid(d);
       }
@@ -56,7 +52,7 @@ export const StopDateField: React.FC<{
       updateStopDate(idx, toISODate(lastValid));
       return;
     }
-    const clamped = clampDate(d, minDate, maxDate);
+    const clamped = clampDate(d, minDate);
     setLastValid(clamped);
     setError(null);
     updateStopDate(idx, toISODate(clamped));
@@ -83,9 +79,8 @@ export const StopDateField: React.FC<{
       }}
       disablePast
       minDate={minDate}
-      maxDate={maxDate}
       format="YYYY-MM-DD"
-      shouldDisableDate={(d) => d.isBefore(minDate, "day") || d.isAfter(maxDate, "day")}
+      shouldDisableDate={(d) => d.isBefore(minDate, "day")}
       closeOnSelect
     />
   );

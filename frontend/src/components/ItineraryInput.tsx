@@ -130,19 +130,12 @@ export default function ItineraryInput({
               Itinerary
             </Typography>
             <Stack direction="row" gap={1}>
-              {/* <DatePicker
-                label="Date"
-                value={itineraryStartDate ? dayjs(itineraryStartDate) : null}
-                onChange={(d: PickerValue) => setItineraryStartDate(d as Dayjs)}
-                slotProps={{ textField: { sx: { minWidth: 180 } } }}
-              /> */}
               <StopDateField
                 idx={0}
                 stop={{ date: toISODate(itineraryStartDate) }}
                 updateStopDate={(idx: number, iso: string | null) => setItineraryStartDate(iso ? dayjs(iso) : dayjs())}
                 toISODate={itineraryStartDate ? (d: PickerValue) => toISODate(d as Dayjs) : () => null}>
               </StopDateField>
-
               <Tooltip title="Clear trip and start new">
                 <Button
                   variant="outlined"
