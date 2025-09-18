@@ -82,11 +82,12 @@ export default function ItineraryInput({
 
   const handleChangeGooglePlace = async (
     googlePlace: Location,
+    placeName: string,
     date: string,
     index: number
   ) => {
     dispatch(fetchForecast({ location: googlePlace.geometry.location, date, index }));
-    updateStop(index, { placeName: googlePlace.name, location: googlePlace });
+    updateStop(index, { placeName, location: googlePlace });
   };
 
   const addStop = () => {
@@ -191,7 +192,7 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               placeName={stop.placeName || ''}
                               onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
-                              onSetGoogleLocation={(googlePlace: Location) => handleChangeGooglePlace(googlePlace, stop.date, idx)}
+                              onSetGoogleLocation={(googlePlace: Location, placeName: string) => handleChangeGooglePlace(googlePlace, placeName, stop.date, idx)}
                             />
 
                             <StopDateField
