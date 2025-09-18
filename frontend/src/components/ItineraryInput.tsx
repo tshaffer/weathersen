@@ -47,9 +47,9 @@ export type ItineraryInputProps = {
 // Utility to format ISO date (yyyy-mm-dd)
 const toISODate = (d: Dayjs | null): string => (d ? d.format("YYYY-MM-DD") : "");
 
-const newStop = (date: Dayjs): ItineraryStop => ({
+const newStop = (): ItineraryStop => ({
   id: crypto.randomUUID(),
-  date: toISODate(date),
+  // date: toISODate(date),
 });
 
 function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
@@ -95,11 +95,7 @@ export default function ItineraryInput({
   };
 
   const addStop = () => {
-    const base = itinerary.length
-      ? dayjs(itinerary[itinerary.length - 1].date || dayjs())
-      : dayjs();
-    const nextDate = base.add(1, "day");
-    setItinerary([...itinerary, newStop(nextDate)]);
+    setItinerary([...itinerary, newStop()]);
   };
 
   const updatePlaceName = (idx: number, placeName: string) => {
@@ -107,13 +103,13 @@ export default function ItineraryInput({
     updateStop(idx, patch);
   };
 
-  const updateStopDate = (idx: number, date: string) => {
-    const patch = { date };
-    if (value[idx].location) {
-      dispatch(fetchForecast({ location: value[idx].location.geometry.location, date, index: idx }));
-    }
-    updateStop(idx, patch);
-  };
+  // const updateStopDate = (idx: number, date: string) => {
+  //   const patch = { date };
+  //   if (value[idx].location) {
+  //     dispatch(fetchForecast({ location: value[idx].location.geometry.location, date, index: idx }));
+  //   }
+  //   updateStop(idx, patch);
+  // };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
     setItinerary(itinerary.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
@@ -203,81 +199,79 @@ export default function ItineraryInput({
                             <LocationAutocomplete
                               placeName={stop.placeName || ''}
                               onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
-                              onSetGoogleLocation={(googlePlace: Location, placeName: string) => handleChangeGooglePlace(googlePlace, placeName, stop.date, idx)}
+                              onSetGoogleLocation={(googlePlace: Location, placeName: string) => handleChangeGooglePlace(googlePlace, placeName, itineraryStartDate.add(idx, 'day').format("YYYY-MM-DD"), idx)}
                             />
 
-                            <StopDateField
-                              idx={idx}
-                              stop={{ date: stop.date }}
-                              updateStopDate={(idx: number, iso: string | null) => updateStopDate(idx, iso!)}
-                              toISODate={toISODate}>
-
-                            </StopDateField>
-
-                            {/* Weather.com-style inline strip */}
-                            <Forecast
-                              stop={stop}
-                              open={!!openRows[idx]}
-                              onToggle={() => toggleRow(idx)}
+                            <DatePicker
+                              label="Date"
+                              value={itineraryStartDate.add(idx, 'day')}
+                              slotProps={{ textField: { sx: { minWidth: 180 } } }}
+                              readOnly
                             />
+                          {/* Weather.com-style inline strip */}
+                          <Forecast
+                            stop={stop}
+                            open={!!openRows[idx]}
+                            onToggle={() => toggleRow(idx)}
+                          />
 
-                            <Tooltip title="Remove stop">
-                              <IconButton color="error" onClick={() => deleteStop(idx)}>
-                                <DeleteOutlineIcon />
-                              </IconButton>
-                            </Tooltip>
+                          <Tooltip title="Remove stop">
+                            <IconButton color="error" onClick={() => deleteStop(idx)}>
+                              <DeleteOutlineIcon />
+                            </IconButton>
+                          </Tooltip>
 
-                          </Stack>
+                        </Stack>
 
                           {/* Collapsible details under the row */}
-                          <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
-                            <ForecastDetails stop={stop} />
-                          </Collapse>
-                        </Box>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </Stack>
+                      <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
+                        <ForecastDetails stop={stop} />
+                      </Collapse>
+                    </Box>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </Stack>
               )}
-            </Droppable>
-          </DragDropContext>
+          </Droppable>
+        </DragDropContext>
 
-          {/* Dev helper JSON */}
-          <Box mt={3}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Current Itinerary (JSON)
-            </Typography>
-            <pre
-              style={{
-                background: "#f7f7f7",
-                padding: 12,
-                borderRadius: 12,
-                overflow: "auto",
-              }}
-            >
-              {JSON.stringify(itinerary, null, 2)}
-            </pre>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Clear Trip dialog */}
-      <Dialog open={showClearDialog} onClose={() => setShowClearDialog(false)}>
-        <DialogTitle>Clear current trip?</DialogTitle>
-        <DialogContent>
-          <Typography>
-            This will remove all current stops and start a new, empty itinerary (we’ll leave one blank stop to get you
-            going).
+        {/* Dev helper JSON */}
+        <Box mt={3}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Current Itinerary (JSON)
           </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowClearDialog(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleClear}>
-            Clear Trip
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </LocalizationProvider>
+          <pre
+            style={{
+              background: "#f7f7f7",
+              padding: 12,
+              borderRadius: 12,
+              overflow: "auto",
+            }}
+          >
+            {JSON.stringify(itinerary, null, 2)}
+          </pre>
+        </Box>
+      </CardContent>
+    </Card>
+
+      {/* Clear Trip dialog */ }
+  <Dialog open={showClearDialog} onClose={() => setShowClearDialog(false)}>
+    <DialogTitle>Clear current trip?</DialogTitle>
+    <DialogContent>
+      <Typography>
+        This will remove all current stops and start a new, empty itinerary (we’ll leave one blank stop to get you
+        going).
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={() => setShowClearDialog(false)}>Cancel</Button>
+      <Button color="error" variant="contained" onClick={handleClear}>
+        Clear Trip
+      </Button>
+    </DialogActions>
+  </Dialog>
+    </LocalizationProvider >
   );
 }
