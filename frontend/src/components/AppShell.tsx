@@ -1,5 +1,5 @@
 // AppShell.tsx
-import React, {  } from 'react';
+import React, { } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@mui/icons-material';
 
 import ItineraryInput from './ItineraryInput';
-import { ItineraryState, ItineraryStop } from '../types';
+import { Itinerary, ItineraryStop } from '../types';
 import { clearItinerary, setItinerary } from '../redux/itinerarySlice';
 
 // ---------------------- AppShell ----------------------
@@ -27,7 +27,7 @@ const AppShell: React.FC = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const itinerary: ItineraryState = useSelector((state: RootState) => state.itinerary);
+  const itinerary: Itinerary = useSelector((state: RootState) => state.itinerary);
 
   const handleUpdateItineraryStops = (newItinerary: ItineraryStop[]) => {
     dispatch(setItinerary(newItinerary));

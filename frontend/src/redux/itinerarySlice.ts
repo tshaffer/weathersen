@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { FetchForecastResponse, ItineraryState, ItineraryStop } from '../types';
-import { current } from 'immer';
+import { FetchForecastResponse, Itinerary, ItineraryStop } from '../types';
 
 export const fetchForecast = createAsyncThunk(
   'forecast/fetchForecast',
@@ -19,7 +18,7 @@ const placeholderStop: ItineraryStop = {
   // location: '',
 };
 
-const initialState: ItineraryState = {
+const initialState: Itinerary = {
   itineraryStart: new Date().toISOString().slice(0, 10),
   itineraryStops: [placeholderStop],
 };
@@ -49,8 +48,6 @@ const itinerarySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(fetchForecast.fulfilled, (state, action: PayloadAction<any>) => {
-
-
       const fetchForecastResponse: FetchForecastResponse = action.payload;
       const { days: forecast, date, index } = fetchForecastResponse;
 

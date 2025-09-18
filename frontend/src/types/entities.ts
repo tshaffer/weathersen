@@ -1,6 +1,6 @@
 import { DailyForecastDay, Location } from "./googleInterfaces";
 
-export interface ItineraryState {
+export interface Itinerary {
   itineraryStart: string; // ISO date string
   itineraryStops: ItineraryStop[];
 }
