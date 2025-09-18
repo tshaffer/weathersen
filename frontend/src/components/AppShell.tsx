@@ -19,7 +19,7 @@ import {
 } from '@mui/icons-material';
 
 import ItineraryInput from './ItineraryInput';
-import { Itinerary, ItineraryState, ItineraryStop } from '../types';
+import { ItineraryState, ItineraryStop } from '../types';
 import { clearItinerary, setItinerary } from '../redux/itinerarySlice';
 
 // ---------------------- AppShell ----------------------
@@ -29,7 +29,7 @@ const AppShell: React.FC = () => {
 
   const itinerary: ItineraryState = useSelector((state: RootState) => state.itinerary);
 
-  const handleUpdateItinerary = (newItinerary: Itinerary) => {
+  const handleUpdateItineraryStops = (newItinerary: ItineraryStop[]) => {
     dispatch(setItinerary(newItinerary));
   };
 
@@ -57,7 +57,7 @@ const AppShell: React.FC = () => {
         <Box mb={2}>
           <ItineraryInput
             value={itinerary.itineraryStops as ItineraryStop[]}
-            onChange={handleUpdateItinerary}
+            onChange={handleUpdateItineraryStops}
             onClear={handleClear}
           />
         </Box>

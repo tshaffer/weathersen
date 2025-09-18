@@ -28,17 +28,19 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
 import { fetchForecast } from "../redux/itinerarySlice";
-import { Location, Itinerary, ItineraryStop } from "../types";
+import { Location, ItineraryStop } from "../types";
 import React from "react";
 import { StopDateField } from "./StopDateField";
 import Forecast from "./Forecast";
 import ForecastDetails from "./ForecastDetails";
+import { DatePicker } from "@mui/x-date-pickers";
+import { PickerValue } from "@mui/x-date-pickers/internals";
 
 // ---------------- Types ----------------
 
 export type ItineraryInputProps = {
-  value: Itinerary;
-  onChange: (next: Itinerary) => void;
+  value: ItineraryStop[];
+  onChange: (next: ItineraryStop[]) => void;
   onClear?: () => void;
 };
 
@@ -65,6 +67,8 @@ export default function ItineraryInput({
 }: ItineraryInputProps) {
 
   const dispatch = useDispatch<AppDispatch>();
+
+  const [itineraryStartDate, setItineraryStartDate] = useState<Dayjs>(dayjs());
 
   const [showClearDialog, setShowClearDialog] = useState(false);
 
@@ -141,6 +145,13 @@ export default function ItineraryInput({
               Itinerary
             </Typography>
             <Stack direction="row" gap={1}>
+              <DatePicker
+                label="Date"
+                value={itineraryStartDate ? dayjs(itineraryStartDate) : null}
+                onChange={(d: PickerValue) => setItineraryStartDate(d as Dayjs)}
+                slotProps={{ textField: { sx: { minWidth: 180 } } }}
+              />
+
               <Tooltip title="Clear trip and start new">
                 <Button
                   variant="outlined"
@@ -217,7 +228,7 @@ export default function ItineraryInput({
                             </Tooltip>
 
                           </Stack>
-                          
+
                           {/* Collapsible details under the row */}
                           <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
                             <ForecastDetails stop={stop} />

@@ -20,6 +20,7 @@ const placeholderStop: ItineraryStop = {
 };
 
 const initialState: ItineraryState = {
+  itineraryStart: new Date().toISOString().slice(0, 10),
   itineraryStops: [placeholderStop],
 };
 
