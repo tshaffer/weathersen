@@ -3,5 +3,5 @@ export * from './Forecast';
 export * from './GoogleMapsProvider';
 export * from './ItineraryInput';
 export * from './LocationAutocomplete';
-export * from './StopDateField';
+export * from './StartDateField';
 export * from './WeathersenPage';

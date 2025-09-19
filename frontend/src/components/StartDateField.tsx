@@ -1,18 +1,17 @@
 import React from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import type { DateValidationError } from '@mui/x-date-pickers/models';
+import type { DateValidationError } from "@mui/x-date-pickers/models";
+import { InputAdornment, Typography } from "@mui/material";
 
 const minDate = dayjs().startOf("day");
-
-function clampDate(v: Dayjs, min: Dayjs) {
-  if (v.isBefore(min, "day")) return min;
-  return v;
-}
-
 type PickerValue = Dayjs | null;
 
-export const StopDateField: React.FC<{
+function clampDate(v: Dayjs, min: Dayjs) {
+  return v.isBefore(min, "day") ? min : v;
+}
+
+export const StartDateField: React.FC<{
   idx: number;
   stop: { date?: string | null };
   updateStopDate: (idx: number, iso: string | null) => void;
@@ -23,9 +22,7 @@ export const StopDateField: React.FC<{
     stop?.date ? dayjs(stop.date) : null
   );
 
-  const handleError = (reason: DateValidationError, _value: PickerValue) => {
-    console.log('DatePicker error:', reason, _value);
-    // Map MUI reasons to friendly messages
+  const handleError = (reason: DateValidationError) => {
     const msg =
       reason === "invalidDate"
         ? "Enter a valid date."
@@ -35,20 +32,8 @@ export const StopDateField: React.FC<{
     setError(msg);
   };
 
-  const handleChange = (d: PickerValue) => {
-    // Let the picker update; we only persist if valid
-    if (d && d.isValid()) {
-      const clamped = clampDate(d, minDate);
-      if (clamped.isSame(d, "day")) {
-        setLastValid(d);
-      }
-    }
-  };
-
   const commit = (d: PickerValue) => {
-    // Called from onAccept (picker close / Enter) and onBlur (typing)
     if (!d || !d.isValid()) {
-      // Revert to last valid (or null)
       updateStopDate(idx, toISODate(lastValid));
       return;
     }
@@ -60,28 +45,44 @@ export const StopDateField: React.FC<{
 
   return (
     <DatePicker
-      label="Date"
+      // no floating label — we use a startAdornment instead
+      label={null as any}
       value={stop.date ? dayjs(stop.date) : null}
-      onChange={handleChange}
+      onChange={() => { }}
       onAccept={commit}
       onError={handleError}
-      slotProps={{
-        textField: {
-          onBlur: (e: any) => {
-            const v = (e.target as HTMLInputElement).value;
-            const parsed = v ? dayjs(v) : null;
-            commit(parsed && parsed.isValid() ? parsed : null);
-          },
-          sx: { minWidth: 180 },
-          error: Boolean(error),
-          helperText: error ?? " ",
-        },
-      }}
       disablePast
       minDate={minDate}
       format="YYYY-MM-DD"
       shouldDisableDate={(d) => d.isBefore(minDate, "day")}
       closeOnSelect
+      slotProps={{
+        textField: {
+          size: "small",                         // compact height
+          sx: {
+            minWidth: 170,
+            "& .MuiInputBase-input": { py: 0.75, lineHeight: 1.4 },
+          },
+          // Put "Start:" inside the input so it aligns perfectly
+          InputProps: {
+            startAdornment: (
+              <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1 }}>
+                  Start:
+                </Typography>
+              </InputAdornment>
+            ),
+          },
+          // Only show helper text when there's an error (keeps height tight)
+          error: Boolean(error),
+          helperText: error ?? undefined,
+          onBlur: (e: any) => {
+            const v = (e.target as HTMLInputElement).value;
+            const parsed = v ? dayjs(v) : null;
+            commit(parsed && parsed.isValid() ? parsed : null);
+          },
+        },
+      }}
     />
   );
 };

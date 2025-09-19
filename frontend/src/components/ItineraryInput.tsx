@@ -18,6 +18,7 @@ import {
   Collapse,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AddIcon from "@mui/icons-material/Add";
 import ReplayIcon from "@mui/icons-material/Replay";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
@@ -33,7 +34,7 @@ import Forecast from "./Forecast";
 import ForecastDetails from "./ForecastDetails";
 import { DatePicker } from "@mui/x-date-pickers";
 import { PickerValue } from "@mui/x-date-pickers/internals";
-import { StopDateField } from "./StopDateField";
+import { StartDateField } from "./StartDateField";
 
 // ---------------- Types ----------------
 
@@ -124,40 +125,61 @@ export default function ItineraryInput({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Card className="shadow-xl rounded-2xl">
-        <CardContent>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-            <Typography variant="h6" fontWeight={700}>
+        <CardContent sx={{ py: 1.5 /* tighter vertical padding */ }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={1}                       // less bottom margin
+            spacing={1}
+          >
+            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
               Itinerary
             </Typography>
-            <Stack direction="row" gap={1}>
-              <StopDateField
+
+            <Stack direction="row" gap={0.75} alignItems="center">
+              <StartDateField
                 idx={0}
                 stop={{ date: toISODate(itineraryStartDate) }}
-                updateStopDate={(idx: number, iso: string | null) => setItineraryStartDate(iso ? dayjs(iso) : dayjs())}
-                toISODate={itineraryStartDate ? (d: PickerValue) => toISODate(d as Dayjs) : () => null}>
-              </StopDateField>
+                updateStopDate={(idx: number, iso: string | null) =>
+                  setItineraryStartDate(iso ? dayjs(iso) : dayjs())
+                }
+                toISODate={itineraryStartDate
+                  ? (d: PickerValue) => toISODate(d as Dayjs)
+                  : () => null}
+              />
+
               <Tooltip title="Clear trip and start new">
                 <Button
                   variant="outlined"
                   color="secondary"
-                  startIcon={<ReplayIcon />}
+                  size="small"                               // <-- smaller button
+                  startIcon={<ReplayIcon fontSize="small" />} // small icon
                   onClick={() => setShowClearDialog(true)}
+                  sx={{ px: 1.25, py: 0.5 }}                 // tighter padding
                 >
                   Clear Trip
                 </Button>
               </Tooltip>
-              <Button variant="contained" startIcon={<AddIcon />} onClick={addStop}>
+
+              <Button
+                variant="contained"
+                size="small"                                  // <-- smaller button
+                startIcon={<AddIcon fontSize="small" />}      // small icon
+                onClick={addStop}
+                sx={{ px: 1.25, py: 0.5 }}                   // tighter padding
+              >
                 Add Stop
               </Button>
             </Stack>
           </Stack>
 
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mb: 1.25 }} />
 
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="stops">
               {(provided) => (
-                <Stack ref={provided.innerRef} {...provided.droppableProps} gap={1}>
+                <Stack ref={provided.innerRef} {...provided.droppableProps} gap={0.75}>
                   {itinerary.map((stop, idx) => (
                     <Draggable draggableId={stop.id} index={idx} key={stop.id}>
                       {(drag) => (
@@ -165,38 +187,52 @@ export default function ItineraryInput({
                           ref={drag.innerRef}
                           {...drag.draggableProps}
                           className="rounded-2xl border border-gray-200"
-                          sx={{ p: 1 }}
+                          sx={{ p: 0.75 }}                   // tighter row padding
                         >
-                          <Stack
-                            direction="row"            // single-line layout
-                            alignItems="center"
-                            gap={1}
-                            sx={{ flexWrap: "nowrap" }} // prevent wrapping
-                          >
+                          <Stack direction="row" alignItems="center" gap={0.75} sx={{ flexWrap: "nowrap" }}>
                             <Box
                               {...drag.dragHandleProps}
-                              sx={{ display: "flex", alignItems: "center", px: 1 }}
+                              sx={{ display: "flex", alignItems: "center", px: 0.5 }}
                             >
                               <DragIndicatorIcon fontSize="small" />
                             </Box>
 
-                            <Typography sx={{ width: 72, minWidth: 72 }} color="text.secondary">
+                            <Typography sx={{ width: 64, minWidth: 64, lineHeight: 1.2 }} color="text.secondary">
                               Day {idx + 1}
                             </Typography>
 
                             <LocationAutocomplete
-                              placeName={stop.placeName || ''}
+                              placeName={stop.placeName || ""}
                               onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
-                              onSetGoogleLocation={(googlePlace: Location, placeName: string) => handleChangeGooglePlace(googlePlace, placeName, itineraryStartDate.add(idx, 'day').format("YYYY-MM-DD"), idx)}
+                              onSetGoogleLocation={(googlePlace: Location, placeName: string) =>
+                                handleChangeGooglePlace(
+                                  googlePlace,
+                                  placeName,
+                                  itineraryStartDate.add(idx, "day").format("YYYY-MM-DD"),
+                                  idx
+                                )
+                              }
                             />
 
-                            <DatePicker
-                              label="Date"
-                              value={itineraryStartDate.add(idx, 'day')}
-                              slotProps={{ textField: { sx: { minWidth: 180 } } }}
-                              readOnly
-                            />
-                            {/* Weather.com-style inline strip */}
+                            {/* Read-only per-stop date, compact */}
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={0.5}
+                              sx={{
+                                px: 0.5,
+                                py: 0.25,
+                              }}
+                            >
+                              <CalendarMonthIcon fontSize="small" />
+                              <Typography
+                                sx={{ width: 120, minWidth: 120, lineHeight: 1.2 }}
+                                color="text.secondary"
+                              >
+                                {itineraryStartDate.add(idx, "day").format("ddd MMM D")}
+                              </Typography>
+                            </Stack>
+
                             <Forecast
                               stop={stop}
                               open={!!openRows[idx]}
@@ -204,14 +240,12 @@ export default function ItineraryInput({
                             />
 
                             <Tooltip title="Remove stop">
-                              <IconButton color="error" onClick={() => deleteStop(idx)}>
-                                <DeleteOutlineIcon />
+                              <IconButton color="error" onClick={() => deleteStop(idx)} size="small">
+                                <DeleteOutlineIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-
                           </Stack>
 
-                          {/* Collapsible details under the row */}
                           <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
                             <ForecastDetails stop={stop} />
                           </Collapse>
@@ -260,6 +294,6 @@ export default function ItineraryInput({
           </Button>
         </DialogActions>
       </Dialog>
-    </LocalizationProvider >
+    </LocalizationProvider>
   );
 }
