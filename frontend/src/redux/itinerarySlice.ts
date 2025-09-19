@@ -1,21 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { FetchForecastResponse, GoogleGeometry, Itinerary, ItineraryStop } from '../types';
+import { FetchForecastResponse, Itinerary, ItineraryStop } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
-import {  Location } from "../types";
-
-// export const fetchAllForecasts = async (itineraryStart: Dayjs, itineraryStops: ItineraryStop[], dispatch: any) => {
-//   for (let i = 0; i < itineraryStops.length; i++) {
-//     const stop = itineraryStops[i];
-//     if (stop.location && itineraryStart) {
-//       const date = itineraryStart.add(i, 'day').format('YYYY-MM-DD');
-//       const location: Location = stop.location!;
-//       const geometry: GoogleGeometry = location.geometry!;
-//       const googleLocation: google.maps.LatLngLiteral = geometry.location!;
-//       dispatch(fetchForecast({ location: googleLocation, date, index: i }));
-//     }
-//   }
-// };
 
 export const fetchAllForecasts = createAsyncThunk(
   'forecast/fetchAllForecasts',
