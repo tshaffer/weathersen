@@ -1,6 +1,31 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { FetchForecastResponse, Itinerary, ItineraryStop } from '../types';
+import { FetchForecastResponse, GoogleGeometry, Itinerary, ItineraryStop } from '../types';
+import dayjs, { Dayjs } from 'dayjs';
+import {  Location } from "../types";
+
+// export const fetchAllForecasts = async (itineraryStart: Dayjs, itineraryStops: ItineraryStop[], dispatch: any) => {
+//   for (let i = 0; i < itineraryStops.length; i++) {
+//     const stop = itineraryStops[i];
+//     if (stop.location && itineraryStart) {
+//       const date = itineraryStart.add(i, 'day').format('YYYY-MM-DD');
+//       const location: Location = stop.location!;
+//       const geometry: GoogleGeometry = location.geometry!;
+//       const googleLocation: google.maps.LatLngLiteral = geometry.location!;
+//       dispatch(fetchForecast({ location: googleLocation, date, index: i }));
+//     }
+//   }
+// };
+
+export const fetchAllForecasts = createAsyncThunk(
+  'forecast/fetchAllForecasts',
+  async ({ date, locations: locationCoordinates, numberOfDays }: { date: string; locations: google.maps.LatLngLiteral[]; numberOfDays: number }) => {
+    const response = await axios.get('/api/v1/allForecasts', {
+      params: { date, location: JSON.stringify(locationCoordinates), numberOfDays },
+    });
+    return { days: response.data.days, date, locations: locationCoordinates };
+  }
+);
 
 export const fetchForecast = createAsyncThunk(
   'forecast/fetchForecast',
@@ -14,12 +39,10 @@ export const fetchForecast = createAsyncThunk(
 
 const placeholderStop: ItineraryStop = {
   id: crypto.randomUUID(),
-  // date: new Date().toISOString().slice(0, 10),
-  // location: '',
 };
 
 const initialState: Itinerary = {
-  itineraryStart: new Date().toISOString().slice(0, 10),
+  itineraryStart: dayjs(),
   itineraryStops: [placeholderStop],
 };
 
@@ -39,7 +62,10 @@ const itinerarySlice = createSlice({
   name: 'itinerary',
   initialState,
   reducers: {
-    setItinerary(state, action: PayloadAction<ItineraryStop[]>) {
+    setItineraryStartDate(state, action: PayloadAction<Dayjs>) {
+      state.itineraryStart = action.payload;
+    },
+    setItineraryStops(state, action: PayloadAction<ItineraryStop[]>) {
       state.itineraryStops = action.payload;
     },
     clearItinerary(state) {
@@ -62,7 +88,8 @@ const itinerarySlice = createSlice({
 });
 
 export const {
-  setItinerary,
+  setItineraryStartDate,
+  setItineraryStops,
   clearItinerary
 } = itinerarySlice.actions;
 

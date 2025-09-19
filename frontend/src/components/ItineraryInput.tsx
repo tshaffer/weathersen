@@ -28,18 +28,19 @@ import dayjs, { Dayjs } from "dayjs";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LocationAutocomplete from "./LocationAutocomplete";
 import { AppDispatch } from "../redux/store";
-import { fetchForecast } from "../redux/itinerarySlice";
+import { fetchAllForecasts, fetchForecast } from "../redux/itinerarySlice";
 import { Location, ItineraryStop } from "../types";
 import Forecast from "./Forecast";
 import ForecastDetails from "./ForecastDetails";
-import { DatePicker } from "@mui/x-date-pickers";
 import { PickerValue } from "@mui/x-date-pickers/internals";
 import { StartDateField } from "./StartDateField";
 
 // ---------------- Types ----------------
 
 export type ItineraryInputProps = {
-  value: ItineraryStop[];
+  itineraryStart: Dayjs;
+  itineraryStops: ItineraryStop[];
+  onUpdateItineraryStartDate: (newDate: Dayjs) => void;
   onChange: (next: ItineraryStop[]) => void;
   onClear?: () => void;
 };
@@ -59,14 +60,16 @@ function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
 
 // --------------- Component ---------------
 export default function ItineraryInput({
-  value,
+  itineraryStart,
+  itineraryStops,
+  onUpdateItineraryStartDate,
   onChange,
   onClear,
 }: ItineraryInputProps) {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const [itineraryStartDate, setItineraryStartDate] = useState<Dayjs>(dayjs());
+  // const [itineraryStartDate, setItineraryStartDate] = useState<Dayjs>(dayjs());
 
   const [showClearDialog, setShowClearDialog] = useState(false);
 
@@ -79,8 +82,12 @@ export default function ItineraryInput({
       return next;
     });
 
-  const itinerary = value;
   const setItinerary = onChange;
+
+  const handleChangeItineraryStartDate = (newDate: Dayjs) => {
+    dispatch(fetchAllForecasts({ date: toISODate(newDate), locations: itineraryStops.map(stop => stop.location!.geometry.location), numberOfDays: itineraryStops.length }));
+    onUpdateItineraryStartDate(newDate);
+  };
 
   const handleChangeGooglePlace = async (
     googlePlace: Location,
@@ -93,7 +100,7 @@ export default function ItineraryInput({
   };
 
   const addStop = () => {
-    setItinerary([...itinerary, newStop()]);
+    setItinerary([...itineraryStops, newStop()]);
   };
 
   const updatePlaceName = (idx: number, placeName: string) => {
@@ -102,17 +109,17 @@ export default function ItineraryInput({
   };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
-    setItinerary(itinerary.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+    setItinerary(itineraryStops.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   const deleteStop = (idx: number) => {
-    const next = itinerary.filter((_, i) => i !== idx);
+    const next = itineraryStops.filter((_, i) => i !== idx);
     setItinerary(next);
   };
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    const next = reorder(itinerary, result.source.index, result.destination.index);
+    const next = reorder(itineraryStops, result.source.index, result.destination.index);
     setItinerary(next);
   };
 
@@ -140,11 +147,11 @@ export default function ItineraryInput({
             <Stack direction="row" gap={0.75} alignItems="center">
               <StartDateField
                 idx={0}
-                stop={{ date: toISODate(itineraryStartDate) }}
+                stop={{ date: toISODate(itineraryStart) }}
                 updateStopDate={(idx: number, iso: string | null) =>
-                  setItineraryStartDate(iso ? dayjs(iso) : dayjs())
+                  handleChangeItineraryStartDate(iso ? dayjs(iso) : dayjs() )
                 }
-                toISODate={itineraryStartDate
+                toISODate={itineraryStart
                   ? (d: PickerValue) => toISODate(d as Dayjs)
                   : () => null}
               />
@@ -180,7 +187,7 @@ export default function ItineraryInput({
             <Droppable droppableId="stops">
               {(provided) => (
                 <Stack ref={provided.innerRef} {...provided.droppableProps} gap={0.75}>
-                  {itinerary.map((stop, idx) => (
+                  {itineraryStops.map((stop, idx) => (
                     <Draggable draggableId={stop.id} index={idx} key={stop.id}>
                       {(drag) => (
                         <Box
@@ -208,7 +215,7 @@ export default function ItineraryInput({
                                 handleChangeGooglePlace(
                                   googlePlace,
                                   placeName,
-                                  itineraryStartDate.add(idx, "day").format("YYYY-MM-DD"),
+                                  itineraryStart.add(idx, "day").format("YYYY-MM-DD"),
                                   idx
                                 )
                               }
@@ -229,7 +236,7 @@ export default function ItineraryInput({
                                 sx={{ width: 120, minWidth: 120, lineHeight: 1.2 }}
                                 color="text.secondary"
                               >
-                                {itineraryStartDate.add(idx, "day").format("ddd MMM D")}
+                                {itineraryStart.add(idx, "day").format("ddd MMM D")}
                               </Typography>
                             </Stack>
 
@@ -272,7 +279,7 @@ export default function ItineraryInput({
                 overflow: "auto",
               }}
             >
-              {JSON.stringify(itinerary, null, 2)}
+              {JSON.stringify(itineraryStops, null, 2)}
             </pre>
           </Box>
         </CardContent>
@@ -283,7 +290,7 @@ export default function ItineraryInput({
         <DialogTitle>Clear current trip?</DialogTitle>
         <DialogContent>
           <Typography>
-            This will remove all current stops and start a new, empty itinerary (we’ll leave one blank stop to get you
+            This will remove all current stops and start a new, empty itineraryStops (we’ll leave one blank stop to get you
             going).
           </Typography>
         </DialogContent>

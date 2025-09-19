@@ -1,7 +1,8 @@
+import { Dayjs } from "dayjs";
 import { DailyForecastDay, Location } from "./googleInterfaces";
 
 export interface Itinerary {
-  itineraryStart: string; // ISO date string
+  itineraryStart: Dayjs;
   itineraryStops: ItineraryStop[];
 }
 

@@ -20,7 +20,8 @@ import {
 
 import ItineraryInput from './ItineraryInput';
 import { Itinerary, ItineraryStop } from '../types';
-import { clearItinerary, setItinerary } from '../redux/itinerarySlice';
+import { clearItinerary, setItineraryStartDate, setItineraryStops } from '../redux/itinerarySlice';
+import { Dayjs } from 'dayjs';
 
 // ---------------------- AppShell ----------------------
 const AppShell: React.FC = () => {
@@ -29,8 +30,12 @@ const AppShell: React.FC = () => {
 
   const itinerary: Itinerary = useSelector((state: RootState) => state.itinerary);
 
+  const handleUpdateItineraryStartDate = (newDate: Dayjs) => {
+    dispatch(setItineraryStartDate(newDate));
+  };
+
   const handleUpdateItineraryStops = (newItinerary: ItineraryStop[]) => {
-    dispatch(setItinerary(newItinerary));
+    dispatch(setItineraryStops(newItinerary));
   };
 
   const handleClear = () => {
@@ -56,7 +61,9 @@ const AppShell: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 3, flexGrow: 1 }}>
         <Box mb={2}>
           <ItineraryInput
-            value={itinerary.itineraryStops as ItineraryStop[]}
+            itineraryStart={itinerary.itineraryStart as Dayjs}
+            itineraryStops={itinerary.itineraryStops as ItineraryStop[]}
+            onUpdateItineraryStartDate={handleUpdateItineraryStartDate}
             onChange={handleUpdateItineraryStops}
             onClear={handleClear}
           />
