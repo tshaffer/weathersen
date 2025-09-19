@@ -34,18 +34,18 @@ import Forecast from "./Forecast";
 import ForecastDetails from "./ForecastDetails";
 import { PickerValue } from "@mui/x-date-pickers/internals";
 import { StartDateField } from "./StartDateField";
+import { toISODate } from "../utilities";
 
 // ---------------- Types ----------------
 
 export type ItineraryInputProps = {
-  itineraryStart: Dayjs;
+  itineraryStart: string;
   itineraryStops: ItineraryStop[];
   onUpdateItineraryStartDate: (newDate: Dayjs) => void;
   onChange: (next: ItineraryStop[]) => void;
   onClear?: () => void;
 };
 
-const toISODate = (d: Dayjs | null): string => (d ? d.format("YYYY-MM-DD") : "");
 
 const newStop = (): ItineraryStop => ({
   id: crypto.randomUUID(),
@@ -147,9 +147,9 @@ export default function ItineraryInput({
             <Stack direction="row" gap={0.75} alignItems="center">
               <StartDateField
                 idx={0}
-                stop={{ date: toISODate(itineraryStart) }}
+                stop={{ date: itineraryStart }}
                 updateStopDate={(idx: number, iso: string | null) =>
-                  handleChangeItineraryStartDate(iso ? dayjs(iso) : dayjs() )
+                  handleChangeItineraryStartDate(iso ? dayjs(iso) : dayjs())
                 }
                 toISODate={itineraryStart
                   ? (d: PickerValue) => toISODate(d as Dayjs)
@@ -215,7 +215,7 @@ export default function ItineraryInput({
                                 handleChangeGooglePlace(
                                   googlePlace,
                                   placeName,
-                                  itineraryStart.add(idx, "day").format("YYYY-MM-DD"),
+                                  dayjs(itineraryStart).add(idx, "day").format("YYYY-MM-DD"),
                                   idx
                                 )
                               }
@@ -236,7 +236,7 @@ export default function ItineraryInput({
                                 sx={{ width: 120, minWidth: 120, lineHeight: 1.2 }}
                                 color="text.secondary"
                               >
-                                {itineraryStart.add(idx, "day").format("ddd MMM D")}
+                                {dayjs(itineraryStart).add(idx, "day").format("ddd MMM D")}
                               </Typography>
                             </Stack>
 

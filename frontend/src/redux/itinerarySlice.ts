@@ -28,7 +28,7 @@ const placeholderStop: ItineraryStop = {
 };
 
 const initialState: Itinerary = {
-  itineraryStart: dayjs(),
+  itineraryStart: dayjs().format("YYYY-MM-DD"),
   itineraryStops: [placeholderStop],
 };
 
@@ -48,7 +48,7 @@ const itinerarySlice = createSlice({
   name: 'itinerary',
   initialState,
   reducers: {
-    setItineraryStartDate(state, action: PayloadAction<Dayjs>) {
+    setItineraryStartDate(state, action: PayloadAction<string>) {
       state.itineraryStart = action.payload;
     },
     setItineraryStops(state, action: PayloadAction<ItineraryStop[]>) {
