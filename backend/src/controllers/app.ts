@@ -17,13 +17,13 @@ export const getAllForecasts= async (request: Request, response: Response, next:
   const googleLocations = JSON.parse(locations) as { lat: number; lng: number }[];
   console.log('Parsed locations:', googleLocations);
 
-  const days: DailyForecastDay[][] = await Promise.all(googleLocations.map(googleLocation => getDailyForecast(googleLocation.lat, googleLocation.lng, 10)));
-  console.log('Forecast days:', days);
+  const forecastsForItineraryStops: DailyForecastDay[][] = await Promise.all(googleLocations.map(googleLocation => getDailyForecast(googleLocation.lat, googleLocation.lng, 10)));
+  console.log('Forecasts for itinerary stops:', forecastsForItineraryStops);
 
   // Here you would normally call your weather API with the location and date
   // For this example, we'll just return a mock response
   return response.json({
-    days,
+    forecastsForItineraryStops,
   });
 }
 

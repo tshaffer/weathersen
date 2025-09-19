@@ -13,6 +13,10 @@ export interface ItineraryStop {
   forecast?: DailyForecastDay;
 }
 
+export interface FetchAllForecastsResponse {
+  forecastsForItineraryStops: DailyForecastDay[][];
+}
+
 export interface FetchForecastResponse {
   days: DailyForecastDay[];
   date: string;
