@@ -36,6 +36,18 @@ import { PickerValue } from "@mui/x-date-pickers/internals";
 import { StartDateField } from "./StartDateField";
 import { toISODate } from "../utilities";
 
+// near the top of ItineraryInput.tsx
+const COL = {
+  drag: 24,
+  day: 64,          // matches your Day {idx+1}
+  date: 120,        // your preferred date label width
+  temps: 72,
+  condition: 180,
+  precip: 64,
+  wind: 88,
+  toggle: 36,       // caret button
+};
+
 // ---------------- Types ----------------
 
 export type ItineraryInputProps = {
@@ -199,30 +211,35 @@ export default function ItineraryInput({
                           <Stack direction="row" alignItems="center" gap={0.75} sx={{ flexWrap: "nowrap" }}>
                             <Box
                               {...drag.dragHandleProps}
-                              sx={{ display: "flex", alignItems: "center", px: 0.5 }}
+                              sx={{ width: COL.drag, minWidth: COL.drag, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                             >
                               <DragIndicatorIcon fontSize="small" />
                             </Box>
 
-                            <Typography sx={{ width: 64, minWidth: 64, lineHeight: 1.2 }} color="text.secondary">
+                            <Typography
+                              sx={{ width: COL.day, minWidth: COL.day, lineHeight: 1.2, flexShrink: 0 }}
+                              color="text.secondary"
+                            >
                               Day {idx + 1}
                             </Typography>
 
-                            <LocationAutocomplete
-                              placeName={stop.placeName || ""}
-                              onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
-                              onSetGoogleLocation={(googlePlace: Location, placeName: string) =>
-                                handleChangeGooglePlace(
-                                  googlePlace,
-                                  placeName,
-                                  dayjs(itineraryStart).add(idx, "day").format("YYYY-MM-DD"),
-                                  idx
-                                )
-                              }
-                            />
+                            <Box sx={{ flexGrow: 1, minWidth: 160, overflow: "hidden" }}>
+                              <LocationAutocomplete
+                                placeName={stop.placeName || ""}
+                                onSetPlaceName={(name: string) => updatePlaceName(idx, name)}
+                                onSetGoogleLocation={(googlePlace: Location, placeName: string) =>
+                                  handleChangeGooglePlace(
+                                    googlePlace,
+                                    placeName,
+                                    dayjs(itineraryStart).add(idx, "day").format("YYYY-MM-DD"),
+                                    idx
+                                  )
+                                }
+                              />
+                            </Box>
 
                             {/* Read-only per-stop date, compact */}
-                            <Stack
+                            {/* <Stack
                               direction="row"
                               alignItems="center"
                               spacing={0.5}
@@ -238,19 +255,35 @@ export default function ItineraryInput({
                               >
                                 {dayjs(itineraryStart).add(idx, "day").format("ddd MMM D")}
                               </Typography>
-                            </Stack>
+                            </Stack> */}
+                            <Typography
+                              sx={{ width: COL.date, minWidth: COL.date, lineHeight: 1.2, flexShrink: 0, whiteSpace: "nowrap" }}
+                              color="text.secondary"
+                            >
+                              {dayjs(itineraryStart).add(idx, "day").format("ddd MMM D")}
+                            </Typography>
 
                             <Forecast
                               stop={stop}
                               open={!!openRows[idx]}
                               onToggle={() => toggleRow(idx)}
+                              columnWidths={{
+                                temps: COL.temps,
+                                condition: COL.condition,
+                                precip: COL.precip,
+                                wind: COL.wind,
+                                toggle: COL.toggle,
+                              }}
                             />
 
-                            <Tooltip title="Remove stop">
-                              <IconButton color="error" onClick={() => deleteStop(idx)} size="small">
-                                <DeleteOutlineIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            <Box sx={{ width: 36, minWidth: 36, flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
+                              <Tooltip title="Remove stop">
+                                <IconButton color="error" onClick={() => deleteStop(idx)} size="small">
+                                  <DeleteOutlineIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                            
                           </Stack>
 
                           <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>

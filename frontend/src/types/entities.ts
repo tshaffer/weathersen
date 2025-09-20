@@ -7,7 +7,6 @@ export interface Itinerary {
 
 export interface ItineraryStop {
   id: string; // unique identifier
-  // date: string; // ISO date string
   placeName?: string;
   location?: Location;
   forecast?: DailyForecastDay;

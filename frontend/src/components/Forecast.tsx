@@ -36,12 +36,22 @@ function conditionFromForecast(stop: ItineraryStop): ConditionView {
 }
 
 export default function Forecast({
-   stop, open, onToggle
-   }: { 
-    stop: ItineraryStop,
-    open: boolean,
-    onToggle: () => void
-   }) {
+  stop, open, onToggle,
+  columnWidths,
+}: {
+  stop: ItineraryStop,
+  open: boolean,
+  onToggle: () => void,
+  columnWidths?: Partial<{ temps: number; condition: number; precip: number; wind: number; toggle: number }>
+}) {
+
+  const w = {
+    temps: columnWidths?.temps ?? 72,
+    condition: columnWidths?.condition ?? 160,
+    precip: columnWidths?.precip ?? 64,
+    wind: columnWidths?.wind ?? 88,
+    toggle: columnWidths?.toggle ?? 36,
+  };
 
   const daytimeForecast = stop.forecast?.daytimeForecast;
   const precip = daytimeForecast?.precipitation?.probability?.percent;
@@ -54,51 +64,52 @@ export default function Forecast({
   const { label, iconUrl, FallbackIcon } = conditionFromForecast(stop);
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1.25}
-      sx={{ flexWrap: "nowrap", ml: 1, whiteSpace: "nowrap" }}
-    >
+    <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: "nowrap", ml: 1, whiteSpace: "nowrap" }}>
       {/* Hi/Lo */}
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 72 }}>
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ width: w.temps, minWidth: w.temps, flexShrink: 0 }}>
         <Typography variant="body2" fontWeight={700}>
           {hi}/{lo}
         </Typography>
       </Stack>
 
-      {/* Condition icon + text */}
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
+      {/* Condition */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={0.5}
+        sx={{ width: w.condition, minWidth: w.condition, flexShrink: 0, overflow: "hidden" }}
+      >
         {iconUrl ? (
-          <Box component="img" src={iconUrl} alt={label} sx={{ width: 20, height: 20, display: "block" }} />
+          <Box component="img" src={iconUrl} alt={label} sx={{ width: 20, height: 20, display: "block", flexShrink: 0 }} />
         ) : (
           <FallbackIcon fontSize="small" />
         )}
-        <Typography variant="body2">{label}</Typography>
+        <Typography variant="body2" noWrap title={label}>
+          {label}
+        </Typography>
       </Stack>
 
-      {/* Precipitation */}
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      {/* Precip */}
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ width: w.precip, minWidth: w.precip, flexShrink: 0 }}>
         <WaterDropOutlinedIcon fontSize="small" />
         <Typography variant="body2">{fmtPct(precip)}</Typography>
       </Stack>
 
-      {/* Wind (mph) */}
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      {/* Wind */}
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ width: w.wind, minWidth: w.wind, flexShrink: 0 }}>
         <AirIcon fontSize="small" />
         <Typography variant="body2">
           {typeof windMph === "number" ? `${windMph} mph` : "—"}
         </Typography>
       </Stack>
 
-      <IconButton
-        size="small"
-        onClick={onToggle}
-        aria-label={open ? "Collapse details" : "Expand details"}
-      >
-        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-      </IconButton>
-
+      {/* Toggle */}
+      <Box sx={{ width: w.toggle, minWidth: w.toggle, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+        <IconButton size="small" onClick={onToggle} aria-label={open ? "Collapse details" : "Expand details"}>
+          {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+        </IconButton>
+      </Box>
     </Stack>
   );
+
 }
