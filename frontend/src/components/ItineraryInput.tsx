@@ -93,7 +93,15 @@ export default function ItineraryInput({
     });
 
   const handleChangeItineraryStartDate = (newDate: Dayjs) => {
-    dispatch(fetchAllForecasts({ date: toISODate(newDate), locations: itineraryStops.map(stop => stop.location!.geometry.location), numberOfDays: itineraryStops.length }));
+    if (!newDate?.isValid()) return; // optional safety
+    const date = toISODate(newDate);  // <- typed as string via overload
+    dispatch(
+      fetchAllForecasts({
+        date,
+        locations: itineraryStops.map(s => s.location!.geometry.location),
+        numberOfDays: itineraryStops.length
+      })
+    );
     onUpdateItineraryStartDate(newDate);
   };
 
@@ -158,9 +166,7 @@ export default function ItineraryInput({
                 updateStartDate={(iso: string | null) =>
                   handleChangeItineraryStartDate(iso ? dayjs(iso) : dayjs())
                 }
-                toISODate={itineraryStart
-                  ? (d: PickerValue) => toISODate(d as Dayjs)
-                  : () => null}
+                toISODate={toISODate}
               />
 
               <Tooltip title="Clear trip and start new">

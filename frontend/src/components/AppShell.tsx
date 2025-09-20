@@ -32,7 +32,7 @@ const AppShell: React.FC = () => {
   const itinerary: Itinerary = useSelector((state: RootState) => state.itinerary);
 
   const handleUpdateItineraryStartDate = (newDate: Dayjs) => {
-    dispatch(setItineraryStartDate(toISODate(newDate)));
+    dispatch(setItineraryStartDate(toISODate(newDate)!));
   };
 
   const handleUpdateItineraryStops = (newItinerary: ItineraryStop[]) => {
