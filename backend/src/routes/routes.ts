@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllForecasts, getForecast, getVersion, runDemo } from '../controllers';
+import { getAllForecasts, getForecast, getVersion } from '../controllers';
 
 export const createRoutes = (app: express.Application) => {
 
@@ -9,8 +9,6 @@ export const createRoutes = (app: express.Application) => {
   });
 
   app.get('/api/v1/version', getVersion);
-
-  app.get('/api/v1/runDemo', runDemo);
 
   app.get('/api/v1/allForecasts', getAllForecasts);
   app.get('/api/v1/forecast', getForecast);
