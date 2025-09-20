@@ -54,7 +54,7 @@ export type ItineraryInputProps = {
   itineraryStart: string;
   itineraryStops: ItineraryStop[];
   onUpdateItineraryStartDate: (newDate: Dayjs) => void;
-  onChange: (next: ItineraryStop[]) => void;
+  onUpdateItineraryStops: (next: ItineraryStop[]) => void;
   onClear?: () => void;
 };
 
@@ -75,7 +75,7 @@ export default function ItineraryInput({
   itineraryStart,
   itineraryStops,
   onUpdateItineraryStartDate,
-  onChange,
+  onUpdateItineraryStops,
   onClear,
 }: ItineraryInputProps) {
 
@@ -91,8 +91,6 @@ export default function ItineraryInput({
       next[i] = !next[i];
       return next;
     });
-
-  const setItinerary = onChange;
 
   const handleChangeItineraryStartDate = (newDate: Dayjs) => {
     dispatch(fetchAllForecasts({ date: toISODate(newDate), locations: itineraryStops.map(stop => stop.location!.geometry.location), numberOfDays: itineraryStops.length }));
@@ -110,7 +108,7 @@ export default function ItineraryInput({
   };
 
   const addStop = () => {
-    setItinerary([...itineraryStops, newStop()]);
+    onUpdateItineraryStops([...itineraryStops, newStop()]);
   };
 
   const updatePlaceName = (idx: number, placeName: string) => {
@@ -119,18 +117,18 @@ export default function ItineraryInput({
   };
 
   const updateStop = (idx: number, patch: Partial<ItineraryStop>) => {
-    setItinerary(itineraryStops.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+    onUpdateItineraryStops(itineraryStops.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   const deleteStop = (idx: number) => {
     const next = itineraryStops.filter((_, i) => i !== idx);
-    setItinerary(next);
+    onUpdateItineraryStops(next);
   };
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     const next = reorder(itineraryStops, result.source.index, result.destination.index);
-    setItinerary(next);
+    onUpdateItineraryStops(next);
   };
 
   const handleClear = () => {

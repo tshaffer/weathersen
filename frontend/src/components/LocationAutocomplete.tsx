@@ -32,8 +32,8 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props) => {
     }
   }, []);
 
-  function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): Location {
-    const googlePlace: Location = {
+  function buildLocation(googlePlaceResult: google.maps.places.PlaceResult): Location {
+    const location: Location = {
       googlePlaceId: googlePlaceResult.place_id!,
       name: googlePlaceResult.name!,
       geometry: {
@@ -41,15 +41,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props) => {
           lat: googlePlaceResult.geometry!.location!.lat(),
           lng: googlePlaceResult.geometry!.location!.lng(),
         },
-        viewport: {
-          east: googlePlaceResult.geometry!.viewport!.getNorthEast().lng(),
-          north: googlePlaceResult.geometry!.viewport!.getNorthEast().lat(),
-          south: googlePlaceResult.geometry!.viewport!.getSouthWest().lat(),
-          west: googlePlaceResult.geometry!.viewport!.getSouthWest().lng(),
-        },
       },
     };
-    return googlePlace;
+    return location;
   }
 
   // UPDATED: track keystrokes to fetch predictions and cache the exact labels
@@ -99,7 +93,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = (props) => {
     }
 
     if (place.geometry?.location) {
-      const googlePlace: Location = pickGooglePlaceProperties(place);
+      const googlePlace: Location = buildLocation(place);
       onSetGoogleLocation(googlePlace, placeName);
     } else {
       console.error('No place geometry found in handlePlaceChanged');

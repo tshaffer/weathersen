@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { DailyForecastDay, FetchAllForecastsResponse, FetchForecastResponse, Itinerary, ItineraryStop } from '../types';
-import dayjs, { Dayjs } from 'dayjs';
+import { FetchAllForecastsResponse, FetchForecastResponse, Itinerary, ItineraryStop } from '../types';
+import dayjs from 'dayjs';
 
 export const fetchAllForecasts = createAsyncThunk(
   'forecast/fetchAllForecasts',

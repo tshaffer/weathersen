@@ -1,6 +1,5 @@
 export interface GoogleGeometry {
   location: google.maps.LatLngLiteral;
-  viewport: google.maps.LatLngBoundsLiteral;
 }
 
 export interface Location {

@@ -65,7 +65,7 @@ const AppShell: React.FC = () => {
             itineraryStart={itinerary.itineraryStart}
             itineraryStops={itinerary.itineraryStops as ItineraryStop[]}
             onUpdateItineraryStartDate={handleUpdateItineraryStartDate}
-            onChange={handleUpdateItineraryStops}
+            onUpdateItineraryStops={handleUpdateItineraryStops}
             onClear={handleClear}
           />
         </Box>
