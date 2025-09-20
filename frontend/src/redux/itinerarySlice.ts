@@ -62,15 +62,11 @@ const itinerarySlice = createSlice({
       .addCase(fetchAllForecasts.fulfilled, (state, action: PayloadAction<any>) => {
         const fetchAllForecastsResponse: FetchAllForecastsResponse = action.payload;
         const { forecastsForItineraryStops } = fetchAllForecastsResponse;
-        // debugger;
-        // const numberOfItineraryStops = state.itineraryStops!.length;
         let itineraryStopIndex = 0;
         for (const forecastsForItineraryStop of forecastsForItineraryStops) {
           let forecastIndex = 0;
           for (const forecastForItineraryStop of forecastsForItineraryStop) {
-            console.log('forecastForItineraryStop.displayDate:', forecastForItineraryStop.displayDate);
             const dateOfItineraryStop: string = dayjs(state.itineraryStart).add(itineraryStopIndex, "day").format("YYYY-MM-DD");
-            console.log('dateOfItineraryStop:', dateOfItineraryStop);
             if (matchesDisplayDate(
               dateOfItineraryStop,
               forecastForItineraryStop.displayDate

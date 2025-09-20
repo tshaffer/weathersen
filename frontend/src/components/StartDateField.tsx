@@ -12,11 +12,10 @@ function clampDate(v: Dayjs, min: Dayjs) {
 }
 
 export const StartDateField: React.FC<{
-  idx: number;
   stop: { date?: string | null };
-  updateStopDate: (idx: number, iso: string | null) => void;
+  updateStartDate: (iso: string | null) => void;
   toISODate: (d: PickerValue) => string | null;
-}> = ({ idx, stop, updateStopDate, toISODate }) => {
+}> = ({ stop, updateStartDate, toISODate }) => {
   const [error, setError] = React.useState<string | null>(null);
   const [lastValid, setLastValid] = React.useState<Dayjs | null>(
     stop?.date ? dayjs(stop.date) : null
@@ -34,13 +33,13 @@ export const StartDateField: React.FC<{
 
   const commit = (d: PickerValue) => {
     if (!d || !d.isValid()) {
-      updateStopDate(idx, toISODate(lastValid));
+      updateStartDate(toISODate(lastValid));
       return;
     }
     const clamped = clampDate(d, minDate);
     setLastValid(clamped);
     setError(null);
-    updateStopDate(idx, toISODate(clamped));
+    updateStartDate(toISODate(clamped));
   };
 
   return (

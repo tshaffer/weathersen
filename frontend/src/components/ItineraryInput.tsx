@@ -81,8 +81,6 @@ export default function ItineraryInput({
 
   const dispatch = useDispatch<AppDispatch>();
 
-  // const [itineraryStartDate, setItineraryStartDate] = useState<Dayjs>(dayjs());
-
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   // simple expand/collapse state per row
@@ -158,9 +156,8 @@ export default function ItineraryInput({
 
             <Stack direction="row" gap={0.75} alignItems="center">
               <StartDateField
-                idx={0}
                 stop={{ date: itineraryStart }}
-                updateStopDate={(idx: number, iso: string | null) =>
+                updateStartDate={(iso: string | null) =>
                   handleChangeItineraryStartDate(iso ? dayjs(iso) : dayjs())
                 }
                 toISODate={itineraryStart
@@ -238,24 +235,6 @@ export default function ItineraryInput({
                               />
                             </Box>
 
-                            {/* Read-only per-stop date, compact */}
-                            {/* <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={0.5}
-                              sx={{
-                                px: 0.5,
-                                py: 0.25,
-                              }}
-                            >
-                              <CalendarMonthIcon fontSize="small" />
-                              <Typography
-                                sx={{ width: 120, minWidth: 120, lineHeight: 1.2 }}
-                                color="text.secondary"
-                              >
-                                {dayjs(itineraryStart).add(idx, "day").format("ddd MMM D")}
-                              </Typography>
-                            </Stack> */}
                             <Typography
                               sx={{ width: COL.date, minWidth: COL.date, lineHeight: 1.2, flexShrink: 0, whiteSpace: "nowrap" }}
                               color="text.secondary"
@@ -283,7 +262,7 @@ export default function ItineraryInput({
                                 </IconButton>
                               </Tooltip>
                             </Box>
-                            
+
                           </Stack>
 
                           <Collapse in={!!openRows[idx]} timeout="auto" unmountOnExit>
