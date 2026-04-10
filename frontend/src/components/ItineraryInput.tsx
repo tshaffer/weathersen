@@ -137,6 +137,12 @@ export default function ItineraryInput({
     if (!result.destination) return;
     const next = reorder(itineraryStops, result.source.index, result.destination.index);
     onUpdateItineraryStops(next);
+    next.forEach((stop, idx) => {
+      if (stop.location) {
+        const date = dayjs(itineraryStart).add(idx, "day").format("YYYY-MM-DD");
+        dispatch(fetchForecast({ location: stop.location.geometry.location, date, index: idx }));
+      }
+    });
   };
 
   const handleClear = () => {
