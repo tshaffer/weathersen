@@ -6,10 +6,12 @@ import path from 'path';
 import fs from 'fs';
 import { Server } from 'http';
 import { createRoutes } from './routes';
+import { connectDB } from './utilities';
 
 const PORT = Number(process.env.PORT || 8080);
 
 async function main() {
+  await connectDB();
   const app = express();
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: '1mb' }));

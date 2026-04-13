@@ -1,5 +1,6 @@
 import express from 'express';
-import { getAllForecasts, getForecast, getVersion } from '../controllers';
+import { getAllForecasts, getForecast, getVersion, login, getUsers, createUser, deleteUser } from '../controllers';
+import { requireAuth, requireAdmin } from '../middleware/auth';
 
 export const createRoutes = (app: express.Application) => {
 
@@ -12,5 +13,13 @@ export const createRoutes = (app: express.Application) => {
 
   app.get('/api/v1/allForecasts', getAllForecasts);
   app.get('/api/v1/forecast', getForecast);
+
+  // Auth
+  app.post('/api/v1/auth/login', login);
+
+  // User management
+  app.get('/api/v1/users', requireAuth, getUsers);
+  app.post('/api/v1/users', requireAdmin, createUser);
+  app.delete('/api/v1/users/:id', requireAdmin, deleteUser);
 
 };
