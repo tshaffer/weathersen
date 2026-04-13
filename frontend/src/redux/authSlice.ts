@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AuthState, User } from '../types';
 
 const TOKEN_KEY = 'weathersen_token';
+const CREDENTIALS_KEY = 'weathersen_credentials';
 
 function loadStoredAuth(): { token: string | null; currentUser: User | null } {
   try {
@@ -12,6 +13,15 @@ function loadStoredAuth(): { token: string | null; currentUser: User | null } {
     return { token, currentUser };
   } catch {
     return { token: null, currentUser: null };
+  }
+}
+
+export function loadStoredCredentials(): { name: string; password: string } | null {
+  try {
+    const raw = localStorage.getItem(CREDENTIALS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -26,7 +36,8 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ name, password }: { name: string; password: string }) => {
     const response = await axios.post('/api/v1/auth/login', { name, password });
-    return response.data as { token: string; user: User };
+    const { token, user } = response.data as { token: string; user: User };
+    return { token, user, credentials: { name, password } };
   }
 );
 
@@ -77,6 +88,7 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem('weathersen_user');
+      localStorage.removeItem(CREDENTIALS_KEY);
     },
     clearAuthError(state) {
       state.error = null;
@@ -90,6 +102,7 @@ const authSlice = createSlice({
         state.error = null;
         localStorage.setItem(TOKEN_KEY, action.payload.token);
         localStorage.setItem('weathersen_user', JSON.stringify(action.payload.user));
+        localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(action.payload.credentials));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.error.message ?? 'Login failed';

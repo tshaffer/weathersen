@@ -5,10 +5,13 @@ import {
   Button,
   Card,
   CardContent,
+  IconButton,
+  InputAdornment,
   TextField,
   Typography,
   Alert,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { AppDispatch, RootState } from '../redux/store';
 import { loginUser, clearAuthError } from '../redux/authSlice';
 
@@ -18,6 +21,7 @@ const Login: React.FC = () => {
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,12 +66,26 @@ const Login: React.FC = () => {
             />
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
               fullWidth
               required
               sx={{ mb: 3 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(v => !v)}
+                      edge="end"
+                      size="small"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <Button
               type="submit"
