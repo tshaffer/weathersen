@@ -68,7 +68,6 @@ const itinerarySlice = createSlice({
       state.itineraryStops = [placeholderStop];
       state.savedId = undefined;
       state.name = undefined;
-      localStorage.removeItem('weathersen_last_itinerary_id');
     },
   },
   extraReducers: (builder) => {
