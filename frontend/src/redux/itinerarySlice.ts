@@ -53,8 +53,16 @@ const itinerarySlice = createSlice({
     setItineraryStops(state, action: PayloadAction<ItineraryStop[]>) {
       state.itineraryStops = action.payload;
     },
+    setItinerarySavedId(state, action: PayloadAction<string | undefined>) {
+      state.savedId = action.payload;
+    },
+    setItineraryName(state, action: PayloadAction<string | undefined>) {
+      state.name = action.payload;
+    },
     clearItinerary(state) {
       state.itineraryStops = [placeholderStop];
+      state.savedId = undefined;
+      state.name = undefined;
     },
   },
   extraReducers: (builder) => {
@@ -97,7 +105,9 @@ const itinerarySlice = createSlice({
 export const {
   setItineraryStartDate,
   setItineraryStops,
-  clearItinerary
+  setItinerarySavedId,
+  setItineraryName,
+  clearItinerary,
 } = itinerarySlice.actions;
 
 export default itinerarySlice.reducer;
