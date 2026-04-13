@@ -29,9 +29,11 @@ import ItineraryInput from './ItineraryInput';
 import ManageUsers from './ManageUsers';
 import SavedItineraries from './SavedItineraries';
 import { Itinerary, ItineraryStop } from '../types';
-import { clearItinerary, setItineraryStartDate, setItineraryStops } from '../redux/itinerarySlice';
+import { clearItinerary, setItineraryStartDate, setItineraryStops, setItinerarySavedId, setItineraryName, fetchForecast } from '../redux/itinerarySlice';
 import { logout } from '../redux/authSlice';
 import { fetchSavedItineraries, clearSavedItineraries } from '../redux/savedItinerariesSlice';
+import { ItineraryStop as ItineraryStopType } from '../types';
+import dayjs from 'dayjs';
 import { Dayjs } from 'dayjs';
 import { toISODate } from '../utilities';
 
@@ -47,7 +49,30 @@ const AppShell: React.FC = () => {
   const [savedItinerariesOpen, setSavedItinerariesOpen] = useState(false);
 
   React.useEffect(() => {
-    if (token) dispatch(fetchSavedItineraries(token));
+    if (!token) return;
+    dispatch(clearItinerary());
+    const lastUsedId = localStorage.getItem('weathersen_last_itinerary_id');
+    dispatch(fetchSavedItineraries(token)).then((result) => {
+      if (!fetchSavedItineraries.fulfilled.match(result)) return;
+      const list = result.payload;
+      if (list.length === 0) return;
+      const toLoad = list.find(i => i._id === lastUsedId) ?? list[0];
+      const stops: ItineraryStopType[] = toLoad.itineraryStops.map(s => ({
+        id: s.stopId,
+        placeName: s.placeName,
+        location: s.location,
+      }));
+      dispatch(setItineraryStartDate(toLoad.itineraryStart));
+      dispatch(setItineraryStops(stops));
+      dispatch(setItinerarySavedId(toLoad._id));
+      dispatch(setItineraryName(toLoad.name));
+      stops.forEach((stop, idx) => {
+        if (stop.location) {
+          const date = dayjs(toLoad.itineraryStart).add(idx, 'day').format('YYYY-MM-DD');
+          dispatch(fetchForecast({ location: stop.location.geometry.location, date, index: idx }));
+        }
+      });
+    });
   }, [dispatch, token]);
 
   const handleUpdateItineraryStartDate = (newDate: Dayjs) => {
@@ -65,6 +90,7 @@ const AppShell: React.FC = () => {
   const handleLogout = () => {
     dispatch(logout());
     dispatch(clearSavedItineraries());
+    dispatch(clearItinerary());
   };
 
   return (

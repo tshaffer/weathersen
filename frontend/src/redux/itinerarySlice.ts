@@ -55,6 +55,11 @@ const itinerarySlice = createSlice({
     },
     setItinerarySavedId(state, action: PayloadAction<string | undefined>) {
       state.savedId = action.payload;
+      if (action.payload) {
+        localStorage.setItem('weathersen_last_itinerary_id', action.payload);
+      } else {
+        localStorage.removeItem('weathersen_last_itinerary_id');
+      }
     },
     setItineraryName(state, action: PayloadAction<string | undefined>) {
       state.name = action.payload;
@@ -63,6 +68,7 @@ const itinerarySlice = createSlice({
       state.itineraryStops = [placeholderStop];
       state.savedId = undefined;
       state.name = undefined;
+      localStorage.removeItem('weathersen_last_itinerary_id');
     },
   },
   extraReducers: (builder) => {
